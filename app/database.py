@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pydantic_settings import BaseSettings
+from urllib.parse import quote_plus
 
 class Settings(BaseSettings):
     """애플리케이션 설정"""
@@ -17,14 +18,23 @@ settings = Settings()
 # DATABASE_URL이 직접 설정되지 않은 경우 Supabase URL 구성
 if not settings.DATABASE_URL:
     if not settings.DATABASE_PASSWORD:
-        raise ValueError("DATABASE_PASSWORD 환경 변수가 설정되지 않았습니다. .env 파일에 DATABASE_PASSWORD를 설정해주세요.")
-    settings.DATABASE_URL = f"postgresql://postgres:{settings.DATABASE_PASSWORD}@db.wxuunspyyvqndpodtesy.supabase.co:5432/postgres"
+        raise ValueError(
+            "DATABASE_PASSWORD 환경 변수가 설정되지 않았습니다. .env 파일에 DATABASE_PASSWORD를 설정해주세요.\n"
+            "또는 Supabase 대시보드에서 제공하는 전체 DATABASE_URL을 .env 파일에 직접 설정할 수 있습니다."
+        )
+    # 비밀번호에 특수문자가 있을 수 있으므로 URL 인코딩
+    encoded_password = quote_plus(settings.DATABASE_PASSWORD)
+    settings.DATABASE_URL = f"postgresql://postgres:{encoded_password}@db.wxuunspyyvqndpodtesy.supabase.co:5432/postgres"
 
 # SQLAlchemy 엔진 생성
+# Supabase는 SSL 연결을 요구하므로 connect_args에 sslmode 설정
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    echo=True  # 개발 모드: SQL 쿼리 로깅
+    echo=True,  # 개발 모드: SQL 쿼리 로깅
+    connect_args={
+        "sslmode": "require"
+    }
 )
 
 # 세션 팩토리 생성
