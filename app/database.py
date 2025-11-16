@@ -5,12 +5,20 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """애플리케이션 설정"""
-    DATABASE_URL: str = "postgresql://user:password@localhost/easymoim"
+    DATABASE_PASSWORD: str = ""
+    DATABASE_URL: str = ""
     
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 settings = Settings()
+
+# DATABASE_URL이 직접 설정되지 않은 경우 Supabase URL 구성
+if not settings.DATABASE_URL:
+    if not settings.DATABASE_PASSWORD:
+        raise ValueError("DATABASE_PASSWORD 환경 변수가 설정되지 않았습니다. .env 파일에 DATABASE_PASSWORD를 설정해주세요.")
+    settings.DATABASE_URL = f"postgresql://postgres:{settings.DATABASE_PASSWORD}@db.wxuunspyyvqndpodtesy.supabase.co:5432/postgres"
 
 # SQLAlchemy 엔진 생성
 engine = create_engine(

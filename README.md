@@ -16,7 +16,24 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 brew install uv
 ```
 
-### 1. uv로 프로젝트 초기화 및 패키지 설치
+### 1. 환경 변수 설정
+
+프로젝트 루트에 `.env` 파일을 생성하고 Supabase 데이터베이스 비밀번호를 설정하세요:
+
+```bash
+# .env 파일 생성
+DATABASE_PASSWORD=your_supabase_password_here
+```
+
+또는 전체 DATABASE_URL을 직접 설정할 수도 있습니다:
+
+```bash
+DATABASE_URL=postgresql://postgres:your_password@db.wxuunspyyvqndpodtesy.supabase.co:5432/postgres
+```
+
+> **참고**: `.env` 파일은 `.gitignore`에 포함되어 있어 Git에 커밋되지 않습니다.
+
+### 2. uv로 프로젝트 초기화 및 패키지 설치
 
 ```bash
 # 프로젝트 동기화 (가상 환경 생성 + 패키지 설치)
@@ -25,7 +42,7 @@ uv sync
 
 > **참고**: `uv.lock` 파일은 git에 포함되어야 합니다. 이 파일은 모든 의존성의 정확한 버전을 고정하여 팀원 간 동일한 개발 환경을 보장합니다.
 
-### 2. 서버 실행
+### 3. 서버 실행
 
 ```bash
 # 방법 1: uv로 직접 실행 (권장)
@@ -39,7 +56,7 @@ source .venv/bin/activate  # macOS/Linux
 python main.py
 ```
 
-### 3. 기타 uv 명령어
+### 4. 기타 uv 명령어
 
 ```bash
 # 패키지 추가

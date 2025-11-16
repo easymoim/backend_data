@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class MeetingTimeCandidateBase(BaseModel):
     """약속 시간 후보 기본 스키마"""
-    candidate_datetime: datetime
+    candidate_time: datetime
 
 
 class MeetingTimeCandidateCreate(MeetingTimeCandidateBase):
@@ -21,8 +21,8 @@ class MeetingTimeCandidateResponse(MeetingTimeCandidateBase):
     """약속 시간 후보 응답 스키마"""
     id: UUID
     meeting_id: UUID
-    vote_count: Optional[int] = None  # 투표 수 (aggregated)
-    available_count: Optional[int] = None  # 가능하다고 투표한 수
+    vote_count: int
+    created_at: datetime
 
     class Config:
         from_attributes = True

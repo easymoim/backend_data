@@ -16,6 +16,7 @@ class TimeVote(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     participant_id = Column(UUID(as_uuid=True), ForeignKey("participants.id"), nullable=False, index=True)
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
     time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidates.id"), nullable=False, index=True)
     
     # 투표 정보
@@ -27,5 +28,6 @@ class TimeVote(Base):
 
     # 관계
     participant = relationship("Participant", back_populates="time_votes")
+    meeting = relationship("Meeting")
     time_candidate = relationship("MeetingTimeCandidate", back_populates="votes")
 

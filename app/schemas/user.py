@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from uuid import UUID
 from typing import Optional
 
 from app.models.user import OAuthProvider
@@ -8,9 +7,8 @@ from app.models.user import OAuthProvider
 
 class UserBase(BaseModel):
     """사용자 기본 스키마"""
+    name: str
     email: EmailStr
-    nickname: Optional[str] = None
-    profile_image_url: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -21,14 +19,14 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     """사용자 업데이트 스키마"""
-    nickname: Optional[str] = None
-    profile_image_url: Optional[str] = None
+    name: Optional[str] = None
 
 
 class UserResponse(UserBase):
     """사용자 응답 스키마"""
-    id: UUID
+    id: int
     oauth_provider: OAuthProvider
+    oauth_id: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
