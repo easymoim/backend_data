@@ -2,6 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+# 모델 import (테이블 생성용)
+from app.database import engine, Base
+from app.models import (
+    User,
+    Meeting,
+    Participant,
+    MeetingTimeCandidate,
+    TimeVote,
+)
+
+# 데이터베이스 테이블 생성
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="EasyMoim API",
     description="EasyMoim 백엔드 API",
