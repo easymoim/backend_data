@@ -60,13 +60,10 @@ class KakaoService:
         kakao_id = str(kakao_data.get("id", ""))
         
         # 이름 (닉네임 또는 이름)
-        name = profile.get("nickname") or kakao_account.get("name") or "카카오 사용자"
+        name = profile.get("nickname") or kakao_account.get("name") or None
         
         # 이메일 (이메일 동의가 필요한 경우)
-        email = kakao_account.get("email", "")
-        if not email:
-            # 이메일이 없는 경우 kakao_id를 이메일 형식으로 사용
-            email = f"kakao_{kakao_id}@kakao.temp"
+        email = kakao_account.get("email", None)
         
         return {
             "oauth_provider": OAuthProvider.KAKAO,
