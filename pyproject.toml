@@ -14,6 +14,7 @@ dependencies = [
     "psycopg2-binary==2.9.9",
     "python-multipart==0.0.6",
     "httpx>=0.25.0",  # 카카오 API 비동기 HTTP 클라이언트
+    "google-generativeai>=0.3.0",  # Gemini API
 ]
 
 [build-system]
