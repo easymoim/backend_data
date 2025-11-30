@@ -21,7 +21,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     
     # OAuth 정보
-    oauth_provider = Column(Enum(OAuthProvider), nullable=False)
+    oauth_provider = Column(String(50), nullable=False)  # google, kakao (Enum을 문자열로 저장)
     oauth_id = Column(String(255), nullable=False, unique=True)
     
     # 메타 정보

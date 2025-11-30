@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_serializer
 from datetime import datetime
 from typing import Optional
 
@@ -25,11 +25,18 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     """사용자 응답 스키마"""
     id: int
-    oauth_provider: OAuthProvider
+    oauth_provider: str  # 문자열로 반환
     oauth_id: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+    @field_serializer('oauth_provider')
+    def serialize_oauth_provider(self, value, _info) -> str:
+        """Enum을 문자열로 변환"""
+        if isinstance(value, OAuthProvider):
+            return value.value
+        return str(value) if value else ""
 
     class Config:
         from_attributes = True
