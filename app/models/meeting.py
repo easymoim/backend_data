@@ -17,11 +17,11 @@ class LocationChoiceType(str, enum.Enum):
 
 class Meeting(Base):
     """약속 모델"""
-    __tablename__ = "meetings"
+    __tablename__ = "meeting"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False)  # 약속 이름
-    creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Host
+    creator_id = Column(Integer, ForeignKey("user.id"), nullable=False)  # Host
     
     # 약속 목적 (string[])
     purpose = Column(ARRAY(String), nullable=False)  # ['dining', 'drink']

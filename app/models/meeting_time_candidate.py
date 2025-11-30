@@ -9,10 +9,10 @@ from app.database import Base
 
 class MeetingTimeCandidate(Base):
     """약속 시간 후보 모델"""
-    __tablename__ = "meeting_time_candidates"
+    __tablename__ = "meeting_time_candidate"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
     
     # 시간 후보 (JSON 형식: {"가능한 시간": "vote_count", "25.11.11.09:00": 3})
     candidate_time = Column(JSON, nullable=False)

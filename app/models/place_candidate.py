@@ -16,10 +16,10 @@ class LocationType(str, enum.Enum):
 
 class PlaceCandidate(Base):
     """장소 후보 모델"""
-    __tablename__ = "place_candidates"
+    __tablename__ = "place_candidate"
 
     id = Column(String(255), primary_key=True, index=True)  # API Place ID 사용
-    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
     
     location = Column(String(255), nullable=True)  # 지역, 정확한 위치 (위도 경도) → ex 강남구, 용산구
     preference_subway = Column(JSON, nullable=True)  # {"서울역", "종각"}

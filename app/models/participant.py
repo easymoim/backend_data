@@ -9,11 +9,11 @@ from app.database import Base
 
 class Participant(Base):
     """참가자 모델"""
-    __tablename__ = "participants"
+    __tablename__ = "participant"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # 비로그인 사용자도 가능
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=True, index=True)  # 비로그인 사용자도 가능
     
     # 참가자 정보
     nickname = Column(String(255), nullable=True)  # 닉네임

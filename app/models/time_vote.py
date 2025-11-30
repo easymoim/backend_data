@@ -9,15 +9,15 @@ from app.database import Base
 
 class TimeVote(Base):
     """시간 투표 모델"""
-    __tablename__ = "time_votes"
+    __tablename__ = "time_vote"
     __table_args__ = (
         UniqueConstraint('participant_id', 'time_candidate_id', name='uq_participant_time_candidate'),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    participant_id = Column(UUID(as_uuid=True), ForeignKey("participants.id"), nullable=False, index=True)
-    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
-    time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidates.id"), nullable=False, index=True)
+    participant_id = Column(UUID(as_uuid=True), ForeignKey("participant.id"), nullable=False, index=True)
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
+    time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidate.id"), nullable=False, index=True)
     
     # 투표 정보
     is_available = Column(Boolean, nullable=False, default=True)  # 가능 여부 (True: 가능, False: 불가능)

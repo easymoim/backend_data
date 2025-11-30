@@ -9,12 +9,12 @@ from app.database import Base
 
 class PlaceVote(Base):
     """장소 투표 모델"""
-    __tablename__ = "place_votes"
+    __tablename__ = "place_vote"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    participant_id = Column(UUID(as_uuid=True), ForeignKey("participants.id"), nullable=False, index=True)
-    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meetings.id"), nullable=False, index=True)
-    time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidates.id"), nullable=False, index=True)
+    participant_id = Column(UUID(as_uuid=True), ForeignKey("participant.id"), nullable=False, index=True)
+    meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
+    time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidate.id"), nullable=False, index=True)
     
     # 투표 정보
     is_available = Column(Boolean, nullable=False, default=True)  # 가능 여부

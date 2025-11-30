@@ -14,7 +14,7 @@ class OAuthProvider(str, enum.Enum):
 
 class User(Base):
     """사용자 모델"""
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
