@@ -18,7 +18,7 @@ from app.models import (
 from app.api import api_router
 
 # 개발 환경에서만 테이블 자동 생성 (프로덕션에서는 마이그레이션 사용)
-is_production = settings.ENVIRONMENT.lower() == "production"
+is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
 if not is_production:
     Base.metadata.create_all(bind=engine)
 
