@@ -28,7 +28,7 @@ class Meeting(Base):
     
     # 장소 관련 설정
     is_one_place = Column(Boolean, nullable=True)  # 한 곳에서 해결 여부
-    location_choice_type = Column(Enum(LocationChoiceType), nullable=True)  # center_location, preference_area, preference_subway
+    location_choice_type = Column(String(50), nullable=True)  # center_location, preference_area, preference_subway (Enum을 문자열로 저장)
     location_choice_value = Column(String(255), nullable=True)  # {"강남구", "강동구", "마포구"} || {"강남역", "설대입구역", "구디역"} || {직접입력한값}
     preference_place = Column(JSON, nullable=True)  # {"mood": "대화 나누기 좋은", "food": "한식", "condition": "주차"}
     

@@ -26,7 +26,7 @@ class PlaceCandidate(Base):
     preference_area = Column(JSON, nullable=True)  # {"강남구", "강동구", "마포구"}
     food = Column(String(255), nullable=True)
     condition = Column(String(255), nullable=True)
-    location_type = Column(Enum(LocationType), nullable=True)  # center_location, preference_area, preference_subway
+    location_type = Column(String(50), nullable=True)  # center_location, preference_area, preference_subway (Enum을 문자열로 저장)
     
     # 관계
     meeting = relationship("Meeting")

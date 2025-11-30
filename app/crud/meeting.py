@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
-from app.models.meeting import Meeting
+from app.models.meeting import Meeting, LocationChoiceType
 from app.schemas.meeting import MeetingCreate, MeetingUpdate
 
 
@@ -27,11 +27,26 @@ def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]
 
 def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meeting:
     """새 약속 생성"""
+    # location_choice_type 문자열을 Enum으로 변환
+    location_choice_type_enum = None
+    if meeting.location_choice_type:
+        try:
+            location_choice_type_enum = LocationChoiceType(meeting.location_choice_type)
+        except ValueError:
+            # 유효하지 않은 값인 경우 None으로 설정
+            location_choice_type_enum = None
+    
     db_meeting = Meeting(
-        title=meeting.title,
-        description=meeting.description,
+        name=meeting.name,
         purpose=meeting.purpose,
         creator_id=creator_id,
+        is_one_place=meeting.is_one_place,
+        location_choice_type=location_choice_type_enum,
+        location_choice_value=meeting.location_choice_value,
+        preference_place=meeting.preference_place,
+        deadline=meeting.deadline,
+        expected_participant_count=meeting.expected_participant_count,
+        share_code=meeting.share_code,
     )
     db.add(db_meeting)
     db.commit()
@@ -45,18 +60,32 @@ def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate)
     if not db_meeting:
         return None
     
-    if meeting_update.title is not None:
-        db_meeting.title = meeting_update.title
-    if meeting_update.description is not None:
-        db_meeting.description = meeting_update.description
+    if meeting_update.name is not None:
+        db_meeting.name = meeting_update.name
     if meeting_update.purpose is not None:
         db_meeting.purpose = meeting_update.purpose
-    if meeting_update.is_confirmed is not None:
-        db_meeting.is_confirmed = meeting_update.is_confirmed
-    if meeting_update.confirmed_at is not None:
-        db_meeting.confirmed_at = meeting_update.confirmed_at
+    if meeting_update.is_one_place is not None:
+        db_meeting.is_one_place = meeting_update.is_one_place
+    if meeting_update.location_choice_type is not None:
+        try:
+            db_meeting.location_choice_type = LocationChoiceType(meeting_update.location_choice_type)
+        except ValueError:
+            # 유효하지 않은 값인 경우 None으로 설정
+            db_meeting.location_choice_type = None
+    if meeting_update.location_choice_value is not None:
+        db_meeting.location_choice_value = meeting_update.location_choice_value
+    if meeting_update.preference_place is not None:
+        db_meeting.preference_place = meeting_update.preference_place
+    if meeting_update.deadline is not None:
+        db_meeting.deadline = meeting_update.deadline
+    if meeting_update.expected_participant_count is not None:
+        db_meeting.expected_participant_count = meeting_update.expected_participant_count
+    if meeting_update.confirmed_time is not None:
+        db_meeting.confirmed_time = meeting_update.confirmed_time
     if meeting_update.confirmed_location is not None:
         db_meeting.confirmed_location = meeting_update.confirmed_location
+    if meeting_update.confirmed_at is not None:
+        db_meeting.confirmed_at = meeting_update.confirmed_at
     
     db.commit()
     db.refresh(db_meeting)

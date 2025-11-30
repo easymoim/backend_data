@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
-from app.models.place_candidate import PlaceCandidate
+from app.models.place_candidate import PlaceCandidate, LocationType
 from app.schemas.place_candidate import PlaceCandidateCreate, PlaceCandidateUpdate
 
 
@@ -17,6 +17,15 @@ def get_place_candidates_by_meeting(db: Session, meeting_id: UUID) -> List[Place
 
 def create_place_candidate(db: Session, candidate: PlaceCandidateCreate) -> PlaceCandidate:
     """새 장소 후보 생성"""
+    # location_type 문자열을 Enum으로 변환
+    location_type_enum = None
+    if candidate.location_type:
+        try:
+            location_type_enum = LocationType(candidate.location_type)
+        except ValueError:
+            # 유효하지 않은 값인 경우 None으로 설정
+            location_type_enum = None
+    
     db_candidate = PlaceCandidate(
         id=candidate.id,
         meeting_id=candidate.meeting_id,
@@ -25,7 +34,7 @@ def create_place_candidate(db: Session, candidate: PlaceCandidateCreate) -> Plac
         preference_area=candidate.preference_area,
         food=candidate.food,
         condition=candidate.condition,
-        location_type=candidate.location_type,
+        location_type=location_type_enum,
     )
     db.add(db_candidate)
     db.commit()
@@ -52,7 +61,11 @@ def update_place_candidate(
     if candidate_update.condition is not None:
         db_candidate.condition = candidate_update.condition
     if candidate_update.location_type is not None:
-        db_candidate.location_type = candidate_update.location_type
+        try:
+            db_candidate.location_type = LocationType(candidate_update.location_type)
+        except ValueError:
+            # 유효하지 않은 값인 경우 None으로 설정
+            db_candidate.location_type = None
     
     db.commit()
     db.refresh(db_candidate)

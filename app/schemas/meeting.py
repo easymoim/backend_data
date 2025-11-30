@@ -1,9 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from datetime import datetime
 from uuid import UUID
 from typing import Optional, List
 
 from app.schemas.user import UserResponse
+from app.models.meeting import LocationChoiceType
 
 
 class MeetingBase(BaseModel):
@@ -55,6 +56,15 @@ class MeetingResponse(MeetingBase):
     created_at: datetime
     updated_at: datetime
     creator: Optional[UserResponse] = None
+
+    @field_serializer('location_choice_type')
+    def serialize_location_choice_type(self, value: Optional[LocationChoiceType], _info) -> Optional[str]:
+        """Enum을 문자열로 변환"""
+        if value is None:
+            return None
+        if isinstance(value, LocationChoiceType):
+            return value.value
+        return str(value) if value else None
 
     class Config:
         from_attributes = True
