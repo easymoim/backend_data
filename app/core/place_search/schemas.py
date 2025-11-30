@@ -150,3 +150,146 @@ class KeywordSearchParams(BaseModel):
     size: int = Field(default=15, description="한 페이지에 보여질 문서 수 (1~15)")
     sort: str = Field(default="accuracy", description="정렬 기준 (accuracy, distance)")
 
+
+# ============================================================
+# LLM 추천 관련 스키마
+# ============================================================
+
+class PlaceCandidate(BaseModel):
+    """LLM에 전달할 장소 후보 정보 (검색 결과 + 추가 정보)"""
+    id: str = Field(..., description="장소 ID (카카오)")
+    place_name: str = Field(..., description="장소명")
+    category: str = Field(..., description="카테고리 (예: 음식점 > 한식 > 한정식)")
+    address: str = Field(..., description="주소")
+    phone: Optional[str] = Field(None, description="전화번호")
+    distance: Optional[int] = Field(None, description="중심점에서의 거리 (미터)")
+    place_url: str = Field(..., description="카카오맵 상세 URL")
+    
+    # 블로그/웹 검색으로 수집한 추가 정보
+    blog_snippets: list[str] = Field(default_factory=list, description="블로그 리뷰 요약")
+    extracted_keywords: list[str] = Field(default_factory=list, description="추출된 키워드 (분위기, 특징)")
+    has_reviews: bool = Field(default=False, description="리뷰 존재 여부")
+    
+    # 추가 정보 (가능한 경우)
+    rating: Optional[float] = Field(None, description="평점")
+    review_count: Optional[int] = Field(None, description="리뷰 수")
+    price_range: Optional[str] = Field(None, description="가격대")
+    
+    @classmethod
+    def from_kakao_result(cls, result: "KakaoPlaceResult") -> "PlaceCandidate":
+        """KakaoPlaceResult에서 PlaceCandidate 생성"""
+        return cls(
+            id=result.id,
+            place_name=result.place_name,
+            category=result.category_name,
+            address=result.road_address_name or result.address_name,
+            phone=result.phone,
+            distance=int(result.distance) if result.distance else None,
+            place_url=result.place_url,
+        )
+    
+    @classmethod
+    async def from_kakao_result_with_details(
+        cls, 
+        result: "KakaoPlaceResult",
+        kakao_client: "KakaoLocalClient",
+        district: Optional[str] = None,
+    ) -> "PlaceCandidate":
+        """KakaoPlaceResult에서 PlaceCandidate 생성 + 상세 정보 수집"""
+        candidate = cls.from_kakao_result(result)
+        
+        # 블로그 검색으로 추가 정보 수집
+        try:
+            details = await kakao_client.get_place_details(
+                place_name=result.place_name,
+                district=district,
+            )
+            candidate.blog_snippets = details.get("blog_snippets", [])
+            candidate.extracted_keywords = details.get("keywords", [])
+            candidate.has_reviews = details.get("has_reviews", False)
+        except Exception:
+            pass
+        
+        return candidate
+
+
+class PlaceRecommendation(BaseModel):
+    """LLM이 추천한 장소"""
+    place_id: str = Field(..., description="장소 ID")
+    place_name: str = Field(..., description="장소명")
+    rank: int = Field(..., description="추천 순위 (1이 최고)")
+    reason: str = Field(..., description="추천 이유")
+    match_score: Optional[float] = Field(None, description="모임 조건 매칭 점수 (0-100)")
+    
+    # 매칭 상세
+    matched_preferences: list[str] = Field(
+        default_factory=list, 
+        description="매칭된 선호도 항목들"
+    )
+    considerations: list[str] = Field(
+        default_factory=list,
+        description="고려사항/주의점"
+    )
+
+
+class LLMRecommendationResult(BaseModel):
+    """LLM 추천 결과 전체"""
+    model_config = {"protected_namespaces": ()}  # model_ 네임스페이스 충돌 방지
+    
+    recommendations: list[PlaceRecommendation] = Field(
+        ..., 
+        description="추천 장소 리스트 (순위순)"
+    )
+    summary: str = Field(..., description="전체 추천 요약")
+    
+    # 메타 정보
+    meeting_context_summary: str = Field(..., description="모임 조건 요약")
+    total_candidates: int = Field(..., description="검토한 총 후보 수")
+    model_used: str = Field(default="gemini", description="사용된 LLM 모델")
+
+
+class LLMPromptContext(BaseModel):
+    """LLM 프롬프트에 전달할 컨텍스트"""
+    # 모임 정보
+    meeting_purpose: str = Field(..., description="모임 목적")
+    participant_count: int = Field(..., description="참가자 수")
+    meeting_title: Optional[str] = Field(None, description="모임 제목")
+    meeting_description: Optional[str] = Field(None, description="모임 설명")
+    
+    # 위치 정보
+    center_district: Optional[str] = Field(None, description="중심 지역")
+    
+    # 선호도 요약
+    preferred_food_types: list[str] = Field(default_factory=list, description="선호 음식 종류")
+    preferred_atmospheres: list[str] = Field(default_factory=list, description="선호 분위기")
+    required_conditions: list[str] = Field(default_factory=list, description="필요 조건")
+    
+    # 장소 후보
+    candidates: list[PlaceCandidate] = Field(default_factory=list, description="장소 후보 리스트")
+    
+    @classmethod
+    def from_meeting_context(
+        cls, 
+        context: "MeetingContext",
+        candidates: list[PlaceCandidate]
+    ) -> "LLMPromptContext":
+        """MeetingContext에서 LLMPromptContext 생성"""
+        # 선호도에서 상위 항목 추출
+        prefs = context.aggregated_preferences or {}
+        
+        food_types = list(prefs.get("food_types", {}).keys())[:3]
+        atmospheres = list(prefs.get("atmospheres", {}).keys())[:3]
+        conditions = list(prefs.get("conditions", {}).keys())[:3]
+        
+        return cls(
+            meeting_purpose=context.purpose,
+            participant_count=context.expected_participant_count,
+            meeting_title=context.title,
+            meeting_description=context.description,
+            center_district=context.center_location.district if context.center_location else None,
+            preferred_food_types=food_types,
+            preferred_atmospheres=atmospheres,
+            required_conditions=conditions,
+            candidates=candidates,
+        )
+

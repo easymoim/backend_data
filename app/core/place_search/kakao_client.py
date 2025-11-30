@@ -230,6 +230,148 @@ class KakaoLocalClient:
             return response.json()
     
     # ============================================================
+    # Daum 검색 API (장소 상세 정보 수집용)
+    # ============================================================
+    
+    async def search_blog(
+        self,
+        query: str,
+        size: int = 5,
+        page: int = 1,
+    ) -> dict:
+        """
+        Daum 블로그 검색 (장소 리뷰/정보 수집용)
+        
+        Args:
+            query: 검색어 (예: "삼원가든 강남")
+            size: 결과 개수 (최대 50)
+            page: 페이지 번호
+            
+        Returns:
+            검색 결과 (documents, meta)
+        """
+        url = "https://dapi.kakao.com/v2/search/blog"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url,
+                headers=self._headers,
+                params={
+                    "query": query,
+                    "size": size,
+                    "page": page,
+                    "sort": "accuracy",
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def search_web(
+        self,
+        query: str,
+        size: int = 5,
+        page: int = 1,
+    ) -> dict:
+        """
+        Daum 웹문서 검색 (장소 정보 수집용)
+        
+        Args:
+            query: 검색어
+            size: 결과 개수 (최대 50)
+            page: 페이지 번호
+            
+        Returns:
+            검색 결과
+        """
+        url = "https://dapi.kakao.com/v2/search/web"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url,
+                headers=self._headers,
+                params={
+                    "query": query,
+                    "size": size,
+                    "page": page,
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+    
+    async def get_place_details(
+        self,
+        place_name: str,
+        district: Optional[str] = None,
+    ) -> dict:
+        """
+        장소명으로 블로그/웹 검색하여 상세 정보 수집
+        
+        Args:
+            place_name: 장소명
+            district: 지역구 (검색 정확도 향상용)
+            
+        Returns:
+            {
+                "blog_snippets": [블로그 내용 요약],
+                "keywords": [추출된 키워드],
+                "has_reviews": bool,
+            }
+        """
+        # 검색어 구성
+        search_query = f"{place_name} {district}" if district else place_name
+        search_query += " 맛집 리뷰"
+        
+        result = {
+            "blog_snippets": [],
+            "keywords": [],
+            "has_reviews": False,
+        }
+        
+        try:
+            # 블로그 검색
+            blog_result = await self.search_blog(search_query, size=3)
+            documents = blog_result.get("documents", [])
+            
+            if documents:
+                result["has_reviews"] = True
+                for doc in documents[:3]:
+                    # HTML 태그 제거 및 요약
+                    contents = doc.get("contents", "")
+                    # 간단한 태그 제거
+                    import re
+                    clean_text = re.sub(r'<[^>]+>', '', contents)
+                    if clean_text:
+                        result["blog_snippets"].append(clean_text[:200])
+                
+                # 키워드 추출 (간단한 방식)
+                all_text = " ".join(result["blog_snippets"])
+                keywords = self._extract_keywords(all_text)
+                result["keywords"] = keywords
+                
+        except Exception as e:
+            print(f"장소 상세 정보 수집 실패 '{place_name}': {e}")
+        
+        return result
+    
+    def _extract_keywords(self, text: str) -> list[str]:
+        """텍스트에서 키워드 추출 (간단한 방식)"""
+        # 음식/분위기 관련 키워드 패턴
+        patterns = [
+            "분위기", "맛있", "친절", "넓", "조용", "깔끔", "가성비",
+            "주차", "예약", "웨이팅", "단체", "룸", "개인실",
+            "데이트", "회식", "가족", "모임", "혼밥",
+            "고기", "한식", "일식", "중식", "양식",
+            "점심", "저녁", "런치", "디너", "코스",
+        ]
+        
+        found = []
+        for pattern in patterns:
+            if pattern in text:
+                found.append(pattern)
+        
+        return found[:5]  # 최대 5개
+    
+    # ============================================================
     # 헬퍼 메서드
     # ============================================================
     
