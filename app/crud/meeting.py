@@ -20,6 +20,11 @@ def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeti
     return db.query(Meeting).offset(skip).limit(limit).all()
 
 
+def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
+    """공유 코드로 약속 조회"""
+    return db.query(Meeting).filter(Meeting.share_code == share_code).first()
+
+
 def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meeting:
     """새 약속 생성"""
     db_meeting = Meeting(

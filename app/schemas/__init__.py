@@ -7,6 +7,13 @@ from app.schemas.meeting_time_candidate import (
     MeetingTimeCandidateWithVotes,
 )
 from app.schemas.time_vote import TimeVoteCreate, TimeVoteResponse, TimeVoteUpdate
+from app.schemas.place import PlaceCreate, PlaceResponse, PlaceUpdate
+from app.schemas.place_candidate import (
+    PlaceCandidateCreate,
+    PlaceCandidateResponse,
+    PlaceCandidateUpdate,
+)
+from app.schemas.place_vote import PlaceVoteCreate, PlaceVoteResponse, PlaceVoteUpdate
 
 __all__ = [
     "UserCreate",
@@ -24,5 +31,14 @@ __all__ = [
     "TimeVoteCreate",
     "TimeVoteResponse",
     "TimeVoteUpdate",
+    "PlaceCreate",
+    "PlaceResponse",
+    "PlaceUpdate",
+    "PlaceCandidateCreate",
+    "PlaceCandidateResponse",
+    "PlaceCandidateUpdate",
+    "PlaceVoteCreate",
+    "PlaceVoteResponse",
+    "PlaceVoteUpdate",
 ]
 

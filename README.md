@@ -87,44 +87,62 @@ backend_data/
 ├── requirements.txt     # Python 패키지 의존성 (호환성 유지)
 ├── .python-version      # Python 버전 지정
 ├── .gitignore          # Git 제외 파일 목록
-└── README.md           # 프로젝트 설명서
+├── README.md           # 프로젝트 설명서
+├── docs/               # 문서 폴더
+│   ├── API_DOCS.md    # API 사용 가이드
+│   ├── ERD.md         # 데이터베이스 ERD
+│   ├── PRD.md         # 제품 요구사항 문서
+│   └── ...            # 기타 문서들
+└── app/               # 애플리케이션 코드
+    ├── api/           # API 라우터
+    ├── crud/          # CRUD 함수
+    ├── models/        # 데이터베이스 모델
+    └── schemas/       # Pydantic 스키마
 ```
 
-## API 엔드포인트
+## API 문서
 
-### 기본 엔드포인트
+프론트엔드 개발자를 위한 상세한 API 문서가 준비되어 있습니다.
+
+📖 **[API_DOCS.md](./docs/API_DOCS.md)** - 전체 API 사용 가이드 (요청/응답 예시 포함)
+
+### 빠른 참조
+
+#### 기본 엔드포인트
 - `GET /` - 루트 엔드포인트
 - `GET /health` - 헬스 체크 엔드포인트
 
-### 인증
+#### 인증
 - `POST /api/v1/auth/kakao/login` - 카카오 로그인
 
-### 사용자
+#### 사용자
 - `POST /api/v1/users` - 사용자 생성
 - `GET /api/v1/users/{user_id}` - 사용자 조회
 - `PUT /api/v1/users/{user_id}` - 사용자 정보 업데이트
 
-### 약속 (Meeting)
-- `POST /api/v1/meetings` - 약속 생성
+#### 약속 (Meeting)
+- `POST /api/v1/meetings?creator_id={user_id}` - 약속 생성
 - `GET /api/v1/meetings` - 약속 목록 조회
+- `GET /api/v1/meetings/share-code/{share_code}` - 공유 코드로 약속 조회
 - `GET /api/v1/meetings/{meeting_id}` - 약속 조회
 - `PUT /api/v1/meetings/{meeting_id}` - 약속 정보 업데이트
 - `DELETE /api/v1/meetings/{meeting_id}` - 약속 삭제
 
-### 참가자 (Participant)
+#### 참가자 (Participant)
 - `POST /api/v1/participants` - 참가자 추가
 - `GET /api/v1/participants/meeting/{meeting_id}` - 약속별 참가자 목록
+- `GET /api/v1/participants/user/{user_id}` - 사용자별 참가한 약속 목록
 - `GET /api/v1/participants/{participant_id}` - 참가자 조회
 - `PUT /api/v1/participants/{participant_id}` - 참가자 정보 업데이트
 - `DELETE /api/v1/participants/{participant_id}` - 참가자 삭제
 
-### 시간 후보 (Time Candidate)
+#### 시간 후보 (Time Candidate)
 - `POST /api/v1/time-candidates` - 시간 후보 추가
 - `GET /api/v1/time-candidates/meeting/{meeting_id}` - 약속별 시간 후보 목록
 - `GET /api/v1/time-candidates/{candidate_id}` - 시간 후보 조회
 - `DELETE /api/v1/time-candidates/{candidate_id}` - 시간 후보 삭제
 
-### 시간 투표 (Time Vote)
+#### 시간 투표 (Time Vote)
 - `POST /api/v1/time-votes` - 시간 투표 (생성/업데이트)
 - `GET /api/v1/time-votes/participant/{participant_id}` - 참가자별 투표 목록
 - `GET /api/v1/time-votes/candidate/{candidate_id}` - 시간 후보별 투표 목록
@@ -132,12 +150,45 @@ backend_data/
 - `PUT /api/v1/time-votes/{vote_id}` - 투표 업데이트
 - `DELETE /api/v1/time-votes/{vote_id}` - 투표 삭제
 
+#### 장소 (Place)
+- `POST /api/v1/places` - 장소 생성
+- `GET /api/v1/places` - 장소 목록 조회
+- `GET /api/v1/places/{place_id}` - 장소 조회
+- `PUT /api/v1/places/{place_id}` - 장소 정보 업데이트
+- `DELETE /api/v1/places/{place_id}` - 장소 삭제
+
+#### 장소 후보 (Place Candidate)
+- `POST /api/v1/place-candidates` - 장소 후보 추가
+- `GET /api/v1/place-candidates/meeting/{meeting_id}` - 약속별 장소 후보 목록
+- `GET /api/v1/place-candidates/{candidate_id}` - 장소 후보 조회
+- `PUT /api/v1/place-candidates/{candidate_id}` - 장소 후보 정보 업데이트
+- `DELETE /api/v1/place-candidates/{candidate_id}` - 장소 후보 삭제
+
+#### 장소 투표 (Place Vote)
+- `POST /api/v1/place-votes` - 장소 투표 (생성/업데이트)
+- `GET /api/v1/place-votes/participant/{participant_id}` - 참가자별 투표 목록
+- `GET /api/v1/place-votes/meeting/{meeting_id}` - 약속별 투표 목록
+- `GET /api/v1/place-votes/{vote_id}` - 투표 조회
+- `PUT /api/v1/place-votes/{vote_id}` - 투표 업데이트
+- `DELETE /api/v1/place-votes/{vote_id}` - 투표 삭제
+
 ## 카카오 로그인
 
 카카오 OAuth 로그인 기능이 구현되어 있습니다.
 
-- **사용 가이드**: [KAKAO_LOGIN_GUIDE.md](./KAKAO_LOGIN_GUIDE.md)
-- **테스트 가이드**: [TEST_KAKAO_LOGIN.md](./TEST_KAKAO_LOGIN.md)
+- **사용 가이드**: [KAKAO_LOGIN_GUIDE.md](./docs/KAKAO_LOGIN_GUIDE.md)
+- **테스트 가이드**: [TEST_KAKAO_LOGIN.md](./docs/TEST_KAKAO_LOGIN.md)
+
+## 문서
+
+프로젝트 관련 문서들은 `docs/` 폴더에 정리되어 있습니다:
+
+- **[API_DOCS.md](./docs/API_DOCS.md)** - API 사용 가이드
+- **[ERD.md](./docs/ERD.md)** - 데이터베이스 ERD
+- **[PRD.md](./docs/PRD.md)** - 제품 요구사항 문서
+- **[KAKAO_LOGIN_GUIDE.md](./docs/KAKAO_LOGIN_GUIDE.md)** - 카카오 로그인 가이드
+- **[TEST_KAKAO_LOGIN.md](./docs/TEST_KAKAO_LOGIN.md)** - 카카오 로그인 테스트 가이드
+- **[ProjectTODO.md](./docs/ProjectTODO.md)** - 프로젝트 TODO
 
 ### 빠른 테스트
 

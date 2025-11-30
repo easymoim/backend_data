@@ -10,6 +10,9 @@ from app.models import (
     Participant,
     MeetingTimeCandidate,
     TimeVote,
+    Place,
+    PlaceCandidate,
+    PlaceVote,
 )
 from app.api import api_router
 

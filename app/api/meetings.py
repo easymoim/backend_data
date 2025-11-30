@@ -37,6 +37,18 @@ def read_meetings_by_creator(creator_id: int, skip: int = 0, limit: int = 100, d
     return meetings
 
 
+@router.get("/share-code/{share_code}", response_model=MeetingResponse)
+def read_meeting_by_share_code(share_code: str, db: Session = Depends(get_db)):
+    """공유 코드로 약속 조회"""
+    db_meeting = crud.meeting.get_meeting_by_share_code(db, share_code=share_code)
+    if db_meeting is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="약속을 찾을 수 없습니다."
+        )
+    return db_meeting
+
+
 @router.get("/{meeting_id}", response_model=MeetingResponse)
 def read_meeting(meeting_id: UUID, db: Session = Depends(get_db)):
     """약속 조회"""
