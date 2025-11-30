@@ -10,7 +10,11 @@ from app.models import (
     Participant,
     MeetingTimeCandidate,
     TimeVote,
+    Place,
+    PlaceCandidate,
+    PlaceVote,
 )
+from app.api import api_router
 
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -29,6 +33,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API 라우터 등록
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/")
