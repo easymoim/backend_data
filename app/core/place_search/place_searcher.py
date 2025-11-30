@@ -173,17 +173,33 @@ class PlaceSearcher:
         expected_count: int = 4,
         radius: int = 5000,
         max_keywords: int = 5,
+        # 장소 선택 방식
+        location_choice_type: str = "center_location",
+        preferred_district: Optional[str] = None,
+        district_votes: Optional[dict[str, int]] = None,
+        preferred_station: Optional[str] = None,
+        station_votes: Optional[dict[str, int]] = None,
     ) -> dict:
         """
         전체 검색 파이프라인 실행 (데이터 수집 → 키워드 생성 → 장소 검색)
         
+        3가지 장소 선택 방식 지원:
+        - center: 중간위치 찾기 (참가자 위치 기반)
+        - district: 선호 지역 선택 (구/동 투표)
+        - station: 선호 지하철역 (역 근처)
+        
         Args:
             purpose: 모임 목적 (dining, cafe, drink, etc)
-            locations: 참가자 위치 리스트
+            locations: 참가자 위치 리스트 (center 방식일 때 필요)
             preferences: 참가자 선호도 리스트
             expected_count: 예상 참가자 수
             radius: 검색 반경
             max_keywords: 최대 키워드 수
+            location_choice_type: 장소 선택 방식 ("center", "district", "station")
+            preferred_district: 선호 지역 (예: "강남구") - district 방식
+            district_votes: 지역별 투표 수 - district 방식
+            preferred_station: 선호 지하철역 (예: "강남") - station 방식
+            station_votes: 역별 투표 수 - station 방식
             
         Returns:
             {
@@ -194,13 +210,18 @@ class PlaceSearcher:
         """
         from .data_collector import analyze_meeting_data
         
-        # 1단계: 데이터 수집 및 분석
+        # 1단계: 데이터 수집 및 분석 (장소 선택 방식에 따라 처리)
         context, keywords = await analyze_meeting_data(
             purpose=purpose,
             locations=locations,
             preferences=preferences,
             expected_count=expected_count,
             kakao_api_key=self.kakao_client.api_key,
+            location_choice_type=location_choice_type,
+            preferred_district=preferred_district,
+            district_votes=district_votes,
+            preferred_station=preferred_station,
+            station_votes=station_votes,
         )
         
         # 2단계: 장소 검색

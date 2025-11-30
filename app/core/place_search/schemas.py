@@ -9,6 +9,26 @@ from uuid import UUID
 
 
 # ============================================================
+# 장소 선택 방식 Enum
+# ============================================================
+
+class LocationChoiceType(str, Enum):
+    """장소 선택 방식"""
+    CENTER_LOCATION = "center_location"       # 중간위치 찾기 (참가자 위치 기반)
+    PREFERENCE_AREA = "preference_area"       # 선호 지역 선택 (구/동 투표)
+    PREFERENCE_SUBWAY = "preference_subway"   # 선호 지하철역 (역 근처)
+
+
+class StationInfo(BaseModel):
+    """지하철역 정보"""
+    name: str = Field(..., description="역명")
+    daily_passengers: int = Field(default=0, description="일평균 승객수")
+    weight: int = Field(default=1, description="가중치 (인기도)")
+    latitude: Optional[float] = Field(None, description="위도")
+    longitude: Optional[float] = Field(None, description="경도")
+
+
+# ============================================================
 # 선호도 관련 Enum
 # ============================================================
 
@@ -91,9 +111,29 @@ class MeetingContext(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     
-    # 위치 정보
+    # 장소 선택 방식
+    location_choice_type: LocationChoiceType = Field(
+        default=LocationChoiceType.CENTER_LOCATION,
+        description="장소 선택 방식 (center_location: 중간위치, preference_area: 선호지역, preference_subway: 선호역)"
+    )
+    
+    # 위치 정보 (중간위치 방식)
     center_location: Optional[CenterLocation] = None
     participant_locations: list[ParticipantLocation] = Field(default_factory=list)
+    
+    # 선호 지역 정보 (선호지역 방식)
+    preferred_district: Optional[str] = Field(None, description="선호 지역 (예: 강남구)")
+    district_votes: Optional[dict[str, int]] = Field(
+        default=None,
+        description="지역별 투표 수 (예: {'강남구': 3, '서초구': 2})"
+    )
+    
+    # 선호 지하철역 정보 (선호역 방식)
+    preferred_station: Optional[str] = Field(None, description="선호 지하철역 (예: 강남)")
+    station_votes: Optional[dict[str, int]] = Field(
+        default=None,
+        description="역별 투표 수 (예: {'강남': 3, '홍대입구': 2})"
+    )
     
     # 선호도 집계 결과
     aggregated_preferences: Optional[dict] = Field(
@@ -160,10 +200,15 @@ class PlaceCandidate(BaseModel):
     id: str = Field(..., description="장소 ID (카카오)")
     place_name: str = Field(..., description="장소명")
     category: str = Field(..., description="카테고리 (예: 음식점 > 한식 > 한정식)")
-    address: str = Field(..., description="주소")
+    address: str = Field(..., description="도로명 주소")
+    address_jibun: Optional[str] = Field(None, description="지번 주소")
     phone: Optional[str] = Field(None, description="전화번호")
     distance: Optional[int] = Field(None, description="중심점에서의 거리 (미터)")
     place_url: str = Field(..., description="카카오맵 상세 URL")
+    
+    # 좌표 정보 (지도 표시용)
+    latitude: Optional[float] = Field(None, description="위도 (y좌표)")
+    longitude: Optional[float] = Field(None, description="경도 (x좌표)")
     
     # 블로그/웹 검색으로 수집한 추가 정보
     blog_snippets: list[str] = Field(default_factory=list, description="블로그 리뷰 요약")
@@ -183,9 +228,12 @@ class PlaceCandidate(BaseModel):
             place_name=result.place_name,
             category=result.category_name,
             address=result.road_address_name or result.address_name,
+            address_jibun=result.address_name,
             phone=result.phone,
             distance=int(result.distance) if result.distance else None,
             place_url=result.place_url,
+            latitude=float(result.y),  # 위도
+            longitude=float(result.x),  # 경도
         )
     
     @classmethod
@@ -214,12 +262,22 @@ class PlaceCandidate(BaseModel):
 
 
 class PlaceRecommendation(BaseModel):
-    """LLM이 추천한 장소"""
-    place_id: str = Field(..., description="장소 ID")
+    """LLM이 추천한 장소 (지도 표시에 필요한 정보 포함)"""
+    place_id: str = Field(..., description="장소 ID (카카오)")
     place_name: str = Field(..., description="장소명")
     rank: int = Field(..., description="추천 순위 (1이 최고)")
     reason: str = Field(..., description="추천 이유")
     match_score: Optional[float] = Field(None, description="모임 조건 매칭 점수 (0-100)")
+    
+    # 지도 표시용 정보 (1차 검색 결과에서 매핑)
+    address: Optional[str] = Field(None, description="도로명 주소")
+    address_jibun: Optional[str] = Field(None, description="지번 주소")
+    latitude: Optional[float] = Field(None, description="위도 (y좌표)")
+    longitude: Optional[float] = Field(None, description="경도 (x좌표)")
+    place_url: Optional[str] = Field(None, description="카카오맵 상세 URL")
+    phone: Optional[str] = Field(None, description="전화번호")
+    category: Optional[str] = Field(None, description="카테고리")
+    distance: Optional[int] = Field(None, description="중심점에서의 거리 (미터)")
     
     # 매칭 상세
     matched_preferences: list[str] = Field(
@@ -259,10 +317,15 @@ class LLMPromptContext(BaseModel):
     # 위치 정보
     center_district: Optional[str] = Field(None, description="중심 지역")
     
-    # 선호도 요약
+    # 선호도 요약 (가중치 포함)
     preferred_food_types: list[str] = Field(default_factory=list, description="선호 음식 종류")
     preferred_atmospheres: list[str] = Field(default_factory=list, description="선호 분위기")
     required_conditions: list[str] = Field(default_factory=list, description="필요 조건")
+    
+    # 선호도 가중치 (투표 수)
+    food_type_weights: dict[str, int] = Field(default_factory=dict, description="음식 종류별 선호 인원")
+    atmosphere_weights: dict[str, int] = Field(default_factory=dict, description="분위기별 선호 인원")
+    condition_weights: dict[str, int] = Field(default_factory=dict, description="조건별 선호 인원")
     
     # 장소 후보
     candidates: list[PlaceCandidate] = Field(default_factory=list, description="장소 후보 리스트")
@@ -274,12 +337,26 @@ class LLMPromptContext(BaseModel):
         candidates: list[PlaceCandidate]
     ) -> "LLMPromptContext":
         """MeetingContext에서 LLMPromptContext 생성"""
-        # 선호도에서 상위 항목 추출
+        # 선호도에서 항목과 가중치 추출 (투표 수 많은 순으로 정렬)
         prefs = context.aggregated_preferences or {}
         
-        food_types = list(prefs.get("food_types", {}).keys())[:3]
-        atmospheres = list(prefs.get("atmospheres", {}).keys())[:3]
-        conditions = list(prefs.get("conditions", {}).keys())[:3]
+        # 음식 종류 (가중치 높은 순)
+        food_data = prefs.get("food_types", {})
+        sorted_foods = sorted(food_data.items(), key=lambda x: x[1], reverse=True)
+        food_types = [item[0] for item in sorted_foods[:5]]
+        food_weights = dict(sorted_foods[:5])
+        
+        # 분위기 (가중치 높은 순)
+        atm_data = prefs.get("atmospheres", {})
+        sorted_atms = sorted(atm_data.items(), key=lambda x: x[1], reverse=True)
+        atmospheres = [item[0] for item in sorted_atms[:5]]
+        atm_weights = dict(sorted_atms[:5])
+        
+        # 조건 (가중치 높은 순)
+        cond_data = prefs.get("conditions", {})
+        sorted_conds = sorted(cond_data.items(), key=lambda x: x[1], reverse=True)
+        conditions = [item[0] for item in sorted_conds[:5]]
+        cond_weights = dict(sorted_conds[:5])
         
         return cls(
             meeting_purpose=context.purpose,
@@ -290,6 +367,9 @@ class LLMPromptContext(BaseModel):
             preferred_food_types=food_types,
             preferred_atmospheres=atmospheres,
             required_conditions=conditions,
+            food_type_weights=food_weights,
+            atmosphere_weights=atm_weights,
+            condition_weights=cond_weights,
             candidates=candidates,
         )
 

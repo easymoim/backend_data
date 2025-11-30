@@ -19,9 +19,11 @@ from .schemas import (
     ParticipantLocation,
     PlacePreference,
     SearchKeyword,
+    LocationChoiceType,
 )
 from .keyword_generator import KeywordGenerator
 from .kakao_client import KakaoLocalClient
+from .station_utils import get_station_coordinates, get_district_from_station
 
 
 class MeetingDataCollector:
@@ -85,23 +87,40 @@ class MeetingDataCollector:
         expected_count: int = 4,
         is_multi_stage: bool = False,
         candidate_times: Optional[list[str]] = None,
+        # 장소 선택 방식 관련
+        location_choice_type: str = "center",
+        preferred_district: Optional[str] = None,
+        district_votes: Optional[dict[str, int]] = None,
+        preferred_station: Optional[str] = None,
+        station_votes: Optional[dict[str, int]] = None,
     ) -> tuple[MeetingContext, list[SearchKeyword]]:
         """
         직접 데이터를 전달받아 분석 (DB 없이 사용 가능)
         
+        3가지 장소 선택 방식 지원:
+        - center: 중간위치 찾기 (참가자 위치 기반)
+        - district: 선호 지역 선택 (구/동 투표)
+        - station: 선호 지하철역 (역 근처)
+        
         Args:
             purpose: 모임 목적 (dining, cafe, drink, etc)
             participant_locations: 참가자 위치 정보 리스트
-                예: [{"address": "서울 강남구 역삼동", "latitude": 37.5, "longitude": 127.0}]
             preferences: 참가자 선호도 리스트
             expected_count: 예상 참가자 수
             is_multi_stage: 1차/2차 등 여러 단계 여부
             candidate_times: 후보 시간 리스트
+            location_choice_type: 장소 선택 방식 ("center", "district", "station")
+            preferred_district: 선호 지역 (district 방식)
+            district_votes: 지역별 투표 수 (district 방식)
+            preferred_station: 선호 지하철역 (station 방식)
+            station_votes: 역별 투표 수 (station 방식)
             
         Returns:
             (MeetingContext, 검색 키워드 리스트) 튜플
         """
         from uuid import uuid4
+        
+        choice_type = LocationChoiceType(location_choice_type)
         
         # ParticipantLocation 객체로 변환
         locations = [
@@ -118,15 +137,27 @@ class MeetingDataCollector:
         # 선호도 집계
         aggregated = self.keyword_generator.aggregate_preferences(preferences)
         
-        # 중심 위치 계산
-        center = await self.calculate_center_location(locations)
+        # 장소 선택 방식에 따른 중심 위치 계산
+        center = await self._calculate_location_by_choice_type(
+            choice_type=choice_type,
+            participant_locations=locations,
+            preferred_district=preferred_district,
+            preferred_station=preferred_station,
+        )
         
         # MeetingContext 생성
         context = MeetingContext(
             meeting_id=uuid4(),
             purpose=purpose,
+            location_choice_type=choice_type,
             center_location=center,
             participant_locations=locations,
+            # 선호 지역/역 정보
+            preferred_district=preferred_district,
+            district_votes=district_votes,
+            preferred_station=preferred_station,
+            station_votes=station_votes,
+            # 선호도
             aggregated_preferences=aggregated,
             expected_participant_count=expected_count,
             is_multi_stage=is_multi_stage,
@@ -137,6 +168,90 @@ class MeetingDataCollector:
         keywords = self.keyword_generator.generate_keywords(context)
         
         return context, keywords
+    
+    async def _calculate_location_by_choice_type(
+        self,
+        choice_type: LocationChoiceType,
+        participant_locations: list[ParticipantLocation],
+        preferred_district: Optional[str] = None,
+        preferred_station: Optional[str] = None,
+    ) -> Optional[CenterLocation]:
+        """
+        장소 선택 방식에 따른 중심 위치 계산
+        
+        Args:
+            choice_type: 장소 선택 방식
+            participant_locations: 참가자 위치 리스트
+            preferred_district: 선호 지역
+            preferred_station: 선호 지하철역
+            
+        Returns:
+            CenterLocation
+        """
+        if choice_type == LocationChoiceType.CENTER_LOCATION:
+            # 중간위치 방식: 참가자 위치의 중심점
+            return await self.calculate_center_location(participant_locations)
+        
+        elif choice_type == LocationChoiceType.PREFERENCE_AREA:
+            # 선호 지역 방식: 해당 지역의 중심
+            if preferred_district:
+                return await self._get_district_center(preferred_district)
+            return None
+        
+        elif choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+            # 선호 지하철역 방식: 역 좌표
+            if preferred_station and self.kakao_client:
+                return await get_station_coordinates(preferred_station, self.kakao_client)
+            elif preferred_station:
+                # 카카오 클라이언트 없으면 지역구만 추출
+                district = get_district_from_station(preferred_station)
+                return CenterLocation(
+                    latitude=0.0,
+                    longitude=0.0,
+                    district=district,
+                )
+            return None
+        
+        return None
+    
+    async def _get_district_center(self, district: str) -> Optional[CenterLocation]:
+        """
+        지역구의 중심 좌표 조회
+        
+        Args:
+            district: 지역구 이름 (예: "강남구")
+            
+        Returns:
+            CenterLocation
+        """
+        if not self.kakao_client:
+            return CenterLocation(
+                latitude=0.0,
+                longitude=0.0,
+                district=district,
+            )
+        
+        # 카카오 API로 지역 검색
+        try:
+            result = await self.kakao_client.search_address(f"서울 {district}")
+            documents = result.get("documents", [])
+            
+            if documents:
+                doc = documents[0]
+                return CenterLocation(
+                    latitude=float(doc["y"]),
+                    longitude=float(doc["x"]),
+                    address=doc.get("address_name"),
+                    district=district,
+                )
+        except Exception as e:
+            print(f"지역 중심 좌표 조회 실패 '{district}': {e}")
+        
+        return CenterLocation(
+            latitude=0.0,
+            longitude=0.0,
+            district=district,
+        )
     
     # ============================================================
     # 데이터 로드 메서드
@@ -365,9 +480,20 @@ async def analyze_meeting_data(
     preferences: list[dict],
     expected_count: int = 4,
     kakao_api_key: Optional[str] = None,
+    # 장소 선택 방식
+    location_choice_type: str = "center_location",
+    preferred_district: Optional[str] = None,
+    district_votes: Optional[dict[str, int]] = None,
+    preferred_station: Optional[str] = None,
+    station_votes: Optional[dict[str, int]] = None,
 ) -> tuple[MeetingContext, list[SearchKeyword]]:
     """
     직접 데이터로 분석하는 편의 함수 (DB 없이 사용)
+    
+    3가지 장소 선택 방식 지원:
+    - center_location: 중간위치 찾기 (참가자 위치 기반)
+    - preference_area: 선호 지역 선택 (구/동 투표)
+    - preference_subway: 선호 지하철역 (역 근처)
     
     Args:
         purpose: 모임 목적
@@ -375,25 +501,42 @@ async def analyze_meeting_data(
         preferences: 참가자 선호도 리스트 (딕셔너리 형태)
         expected_count: 예상 참가자 수
         kakao_api_key: 카카오 REST API 키 (선택)
+        location_choice_type: 장소 선택 방식 ("center", "district", "station")
+        preferred_district: 선호 지역 (예: "강남구")
+        district_votes: 지역별 투표 수
+        preferred_station: 선호 지하철역 (예: "강남")
+        station_votes: 역별 투표 수
         
     Returns:
         (MeetingContext, 검색 키워드 리스트) 튜플
         
-    Example:
+    Example (중간위치 방식):
         >>> context, keywords = await analyze_meeting_data(
         ...     purpose="dining",
-        ...     locations=[
-        ...         {"address": "서울 강남구 역삼동"},
-        ...         {"address": "서울 서초구 서초동"},
-        ...     ],
-        ...     preferences=[
-        ...         {"food_types": ["korean"], "atmospheres": ["quiet"]},
-        ...         {"food_types": ["korean", "japanese"], "atmospheres": ["quiet"]},
-        ...     ],
-        ...     expected_count=6,
+        ...     locations=[{"address": "서울 강남구 역삼동"}],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="center",
         ... )
-        >>> print([kw.keyword for kw in keywords])
-        ['강남구 조용한 한식', '강남구 맛집', ...]
+        
+    Example (선호 지역 방식):
+        >>> context, keywords = await analyze_meeting_data(
+        ...     purpose="dining",
+        ...     locations=[],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="district",
+        ...     preferred_district="강남구",
+        ...     district_votes={"강남구": 3, "서초구": 2},
+        ... )
+        
+    Example (선호 지하철역 방식):
+        >>> context, keywords = await analyze_meeting_data(
+        ...     purpose="dining",
+        ...     locations=[],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="station",
+        ...     preferred_station="홍대입구",
+        ...     station_votes={"홍대입구": 4, "강남": 2},
+        ... )
     """
     kakao_client = None
     if kakao_api_key:
@@ -416,5 +559,10 @@ async def analyze_meeting_data(
         participant_locations=locations,
         preferences=pref_objects,
         expected_count=expected_count,
+        location_choice_type=location_choice_type,
+        preferred_district=preferred_district,
+        district_votes=district_votes,
+        preferred_station=preferred_station,
+        station_votes=station_votes,
     )
 

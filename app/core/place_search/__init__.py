@@ -9,11 +9,17 @@
 - keyword_generator: 검색 키워드 생성
 - place_searcher: 장소 검색 및 필터링 (2단계)
 - llm_recommender: LLM 기반 장소 추천 (3단계)
+- station_utils: 지하철역 유틸리티
 - schemas: 데이터 스키마 정의
+
+장소 선택 방식:
+- center: 중간위치 찾기 (참가자 위치 기반)
+- district: 선호 지역 선택 (구/동 투표)
+- station: 선호 지하철역 (역 근처)
 """
 
 from .kakao_client import KakaoLocalClient
-from .data_collector import MeetingDataCollector
+from .data_collector import MeetingDataCollector, analyze_meeting_data, collect_meeting_data
 from .keyword_generator import KeywordGenerator
 from .place_searcher import PlaceSearcher, search_places_by_keywords, quick_search
 from .llm_recommender import (
@@ -21,7 +27,14 @@ from .llm_recommender import (
     recommend_places,
     full_recommendation_pipeline,
 )
+from .station_utils import (
+    get_station_coordinates,
+    get_district_from_station,
+)
 from .schemas import (
+    # 장소 선택 방식
+    LocationChoiceType,
+    # 선호도 관련
     PlacePreference,
     MeetingContext,
     SearchKeyword,
@@ -50,7 +63,13 @@ __all__ = [
     "quick_search",
     "recommend_places",
     "full_recommendation_pipeline",
+    "analyze_meeting_data",
+    "collect_meeting_data",
+    # 지하철역 유틸리티
+    "get_station_coordinates",
+    "get_district_from_station",
     # 스키마
+    "LocationChoiceType",
     "PlacePreference",
     "MeetingContext",
     "SearchKeyword",

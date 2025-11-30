@@ -17,6 +17,7 @@ from .schemas import (
     PlaceRecommendation,
     LLMRecommendationResult,
     LLMPromptContext,
+    LocationChoiceType,
 )
 
 
@@ -62,6 +63,12 @@ PURPOSE_KR = {
     "cafe": "카페 모임",
     "drink": "술자리",
     "etc": "기타 모임",
+}
+
+LOCATION_CHOICE_KR = {
+    "center_location": "중간위치",
+    "preference_area": "선호지역",
+    "preference_subway": "선호역 근처",
 }
 
 
@@ -142,7 +149,7 @@ class LLMRecommender:
         prompt_context = LLMPromptContext.from_meeting_context(context, candidates)
         
         # 3. 프롬프트 생성
-        prompt = self._build_prompt(prompt_context, top_n)
+        prompt = self._build_prompt(prompt_context, context, top_n)
         
         # 4. LLM 호출
         response = await self._call_llm(prompt)
@@ -210,41 +217,82 @@ class LLMRecommender:
     # 프롬프트 생성
     # ============================================================
     
-    def _build_prompt(self, context: LLMPromptContext, top_n: int) -> str:
+    def _build_prompt(
+        self, 
+        prompt_context: LLMPromptContext, 
+        meeting_context: MeetingContext,
+        top_n: int
+    ) -> str:
         """LLM 프롬프트 생성"""
         
         # 모임 정보 요약
-        purpose_kr = PURPOSE_KR.get(context.meeting_purpose, context.meeting_purpose)
-        food_types_kr = [FOOD_TYPE_KR.get(f, f) for f in context.preferred_food_types]
-        atmospheres_kr = [ATMOSPHERE_KR.get(a, a) for a in context.preferred_atmospheres]
-        conditions_kr = [CONDITION_KR.get(c, c) for c in context.required_conditions]
+        purpose_kr = PURPOSE_KR.get(prompt_context.meeting_purpose, prompt_context.meeting_purpose)
+        
+        # 장소 선택 방식 정보
+        choice_type = meeting_context.location_choice_type
+        choice_type_kr = LOCATION_CHOICE_KR.get(choice_type.value, choice_type.value)
         
         meeting_info = f"""
 ## 모임 정보
 - **모임 유형**: {purpose_kr}
-- **참가 인원**: {context.participant_count}명
-- **지역**: {context.center_district or "미정"}
+- **참가 인원**: {prompt_context.participant_count}명
+- **장소 선택 방식**: {choice_type_kr}
 """
-        if context.meeting_title:
-            meeting_info += f"- **모임명**: {context.meeting_title}\n"
-        if context.meeting_description:
-            meeting_info += f"- **모임 설명**: {context.meeting_description}\n"
         
+        # 장소 선택 방식별 추가 정보
+        if choice_type == LocationChoiceType.CENTER_LOCATION:
+            meeting_info += f"- **중심 위치 지역**: {prompt_context.center_district or '미정'}\n"
+        elif choice_type == LocationChoiceType.PREFERENCE_AREA:
+            meeting_info += f"- **선호 지역**: {meeting_context.preferred_district or '미정'}\n"
+            if meeting_context.district_votes:
+                votes_str = ", ".join([f"{k}({v}표)" for k, v in meeting_context.district_votes.items()])
+                meeting_info += f"- **지역 투표 결과**: {votes_str}\n"
+        elif choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+            meeting_info += f"- **선호 지하철역**: {meeting_context.preferred_station or '미정'}\n"
+            if meeting_context.station_votes:
+                votes_str = ", ".join([f"{k}역({v}표)" for k, v in meeting_context.station_votes.items()])
+                meeting_info += f"- **역 투표 결과**: {votes_str}\n"
+        
+        if prompt_context.meeting_title:
+            meeting_info += f"- **모임명**: {prompt_context.meeting_title}\n"
+        if prompt_context.meeting_description:
+            meeting_info += f"- **모임 설명**: {prompt_context.meeting_description}\n"
+        
+        # 선호도 정보 (가중치 포함)
         preferences_info = """
-## 참가자 선호도
+## 참가자 선호도 (선호 인원수 기준 정렬)
 """
-        if food_types_kr:
-            preferences_info += f"- **선호 음식**: {', '.join(food_types_kr)}\n"
-        if atmospheres_kr:
-            preferences_info += f"- **선호 분위기**: {', '.join(atmospheres_kr)}\n"
-        if conditions_kr:
-            preferences_info += f"- **필요 조건**: {', '.join(conditions_kr)}\n"
+        # 음식 선호도 (가중치 포함)
+        if prompt_context.food_type_weights:
+            food_list = []
+            for food, count in prompt_context.food_type_weights.items():
+                food_kr = FOOD_TYPE_KR.get(food, food)
+                food_list.append(f"{food_kr}({count}명)")
+            preferences_info += f"- **선호 음식**: {', '.join(food_list)}\n"
+        
+        # 분위기 선호도 (가중치 포함)
+        if prompt_context.atmosphere_weights:
+            atm_list = []
+            for atm, count in prompt_context.atmosphere_weights.items():
+                atm_kr = ATMOSPHERE_KR.get(atm, atm)
+                atm_list.append(f"{atm_kr}({count}명)")
+            preferences_info += f"- **선호 분위기**: {', '.join(atm_list)}\n"
+        
+        # 필요 조건 (가중치 포함)
+        if prompt_context.condition_weights:
+            cond_list = []
+            for cond, count in prompt_context.condition_weights.items():
+                cond_kr = CONDITION_KR.get(cond, cond)
+                cond_list.append(f"{cond_kr}({count}명)")
+            preferences_info += f"- **필요 조건**: {', '.join(cond_list)}\n"
+        
+        preferences_info += "\n※ 괄호 안 숫자는 해당 항목을 선호하는 참가자 수입니다. 더 많은 참가자가 선호하는 항목을 우선적으로 고려해주세요.\n"
         
         # 장소 후보 목록
         candidates_info = """
 ## 장소 후보 목록
 """
-        for i, c in enumerate(context.candidates[:20], 1):  # 최대 20개
+        for i, c in enumerate(prompt_context.candidates[:20], 1):  # 최대 20개
             distance_str = f"{c.distance}m" if c.distance else "거리 정보 없음"
             candidates_info += f"""
 ### {i}. {c.place_name}
@@ -263,6 +311,11 @@ class LLMRecommender:
                     # 너무 길면 자르기
                     short_snippet = snippet[:150] + "..." if len(snippet) > 150 else snippet
                     candidates_info += f"  > {short_snippet}\n"
+        
+        # 장소 선택 방식별 추천 기준 조정
+        extra_criteria = ""
+        if choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+            extra_criteria = "6. 지하철역과의 거리 (도보 접근성)\n"
         
         prompt = f"""당신은 모임 장소 추천 전문가입니다. 
 아래의 모임 정보와 참가자 선호도를 고려하여, 장소 후보 중에서 가장 적합한 장소 {top_n}곳을 추천해주세요.
@@ -297,7 +350,7 @@ class LLMRecommender:
 3. 필요한 조건(주차, 룸, 단체 등)을 충족하는지
 4. 참가 인원이 이용하기 적합한지
 5. 접근성 (거리)
-
+{extra_criteria}
 JSON 형식으로만 응답해주세요.
 """
         return prompt
@@ -339,18 +392,41 @@ JSON 형식으로만 응답해주세요.
             # 파싱 실패 시 기본 응답 생성
             return self._create_fallback_result(context, candidates, str(e))
         
-        # PlaceRecommendation 리스트 생성
+        # 원본 장소 정보를 ID/이름으로 빠르게 찾기 위한 맵 생성
+        candidates_by_id = {c.id: c for c in candidates}
+        candidates_by_name = {c.place_name: c for c in candidates}
+        
+        # PlaceRecommendation 리스트 생성 (원본 장소 정보 매핑)
         recommendations = []
         for rec in data.get("recommendations", []):
-            recommendations.append(PlaceRecommendation(
-                place_id=rec.get("place_id", ""),
-                place_name=rec.get("place_name", ""),
+            place_id = rec.get("place_id", "")
+            place_name = rec.get("place_name", "")
+            
+            # 원본 장소 정보 찾기 (ID 또는 이름으로)
+            original = candidates_by_id.get(place_id) or candidates_by_name.get(place_name)
+            
+            recommendation = PlaceRecommendation(
+                place_id=original.id if original else place_id,
+                place_name=original.place_name if original else place_name,
                 rank=rec.get("rank", len(recommendations) + 1),
                 reason=rec.get("reason", ""),
                 match_score=rec.get("match_score"),
                 matched_preferences=rec.get("matched_preferences", []),
                 considerations=rec.get("considerations", []),
-            ))
+            )
+            
+            # 원본 장소에서 지도 표시용 정보 매핑
+            if original:
+                recommendation.address = original.address
+                recommendation.address_jibun = original.address_jibun
+                recommendation.latitude = original.latitude
+                recommendation.longitude = original.longitude
+                recommendation.place_url = original.place_url
+                recommendation.phone = original.phone
+                recommendation.category = original.category
+                recommendation.distance = original.distance
+            
+            recommendations.append(recommendation)
         
         # 모임 컨텍스트 요약 생성
         purpose_kr = PURPOSE_KR.get(context.meeting_purpose, context.meeting_purpose)
@@ -384,6 +460,15 @@ JSON 형식으로만 응답해주세요.
                 place_name=c.place_name,
                 rank=i,
                 reason=f"{c.category} 카테고리의 장소입니다.",
+                # 지도 표시용 정보
+                address=c.address,
+                address_jibun=c.address_jibun,
+                latitude=c.latitude,
+                longitude=c.longitude,
+                place_url=c.place_url,
+                phone=c.phone,
+                category=c.category,
+                distance=c.distance,
                 matched_preferences=[],
                 considerations=["LLM 응답 파싱 실패로 기본 추천이 제공되었습니다."],
             ))
@@ -433,18 +518,34 @@ async def full_recommendation_pipeline(
     top_n: int = 3,
     kakao_api_key: Optional[str] = None,
     gemini_api_key: Optional[str] = None,
+    # 장소 선택 방식
+    location_choice_type: str = "center_location",
+    preferred_district: Optional[str] = None,
+    district_votes: Optional[dict[str, int]] = None,
+    preferred_station: Optional[str] = None,
+    station_votes: Optional[dict[str, int]] = None,
 ) -> dict:
     """
     전체 추천 파이프라인 (1단계 + 2단계 + 3단계)
     
+    3가지 장소 선택 방식 지원:
+    - center_location: 중간위치 찾기 (참가자 위치 기반)
+    - preference_area: 선호 지역 선택 (구/동 투표)
+    - preference_subway: 선호 지하철역 (역 근처)
+    
     Args:
         purpose: 모임 목적
-        locations: 참가자 위치 리스트
+        locations: 참가자 위치 리스트 (center_location 방식일 때 필요)
         preferences: 참가자 선호도 리스트
         expected_count: 예상 참가자 수
         top_n: 추천할 장소 수
         kakao_api_key: 카카오 API 키 (선택, 환경변수에서 가져옴)
         gemini_api_key: Gemini API 키 (선택, 환경변수에서 가져옴)
+        location_choice_type: 장소 선택 방식
+        preferred_district: 선호 지역 (예: "강남구") - preference_area 방식
+        district_votes: 지역별 투표 수 - preference_area 방식
+        preferred_station: 선호 지하철역 (예: "강남") - preference_subway 방식
+        station_votes: 역별 투표 수 - preference_subway 방식
         
     Returns:
         {
@@ -453,6 +554,32 @@ async def full_recommendation_pipeline(
             "places": list[KakaoPlaceResult],
             "recommendations": LLMRecommendationResult,
         }
+        
+    Example (중간위치 방식):
+        >>> result = await full_recommendation_pipeline(
+        ...     purpose="dining",
+        ...     locations=[{"address": "서울 강남구 역삼동"}],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="center_location",
+        ... )
+        
+    Example (선호 지역 방식):
+        >>> result = await full_recommendation_pipeline(
+        ...     purpose="dining",
+        ...     locations=[],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="preference_area",
+        ...     preferred_district="홍대",
+        ... )
+        
+    Example (선호 지하철역 방식):
+        >>> result = await full_recommendation_pipeline(
+        ...     purpose="dining",
+        ...     locations=[],
+        ...     preferences=[{"food_types": ["korean"]}],
+        ...     location_choice_type="preference_subway",
+        ...     preferred_station="홍대입구",
+        ... )
     """
     from .place_searcher import PlaceSearcher
     
@@ -463,6 +590,11 @@ async def full_recommendation_pipeline(
         locations=locations,
         preferences=preferences,
         expected_count=expected_count,
+        location_choice_type=location_choice_type,
+        preferred_district=preferred_district,
+        district_votes=district_votes,
+        preferred_station=preferred_station,
+        station_votes=station_votes,
     )
     
     # 3단계: LLM 추천
@@ -477,4 +609,3 @@ async def full_recommendation_pipeline(
         **pipeline_result,
         "recommendations": recommendations,
     }
-
