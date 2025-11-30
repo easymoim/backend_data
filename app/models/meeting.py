@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Boolean, Enum, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Enum, Integer
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSON
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -8,12 +8,11 @@ import enum
 from app.database import Base
 
 
-class MeetingPurpose(str, enum.Enum):
-    """약속 목적"""
-    DINING = "dining"
-    CAFE = "cafe"
-    DRINK = "drink"
-    ETC = "etc"
+class LocationChoiceType(str, enum.Enum):
+    """장소 선택 타입"""
+    CENTER_LOCATION = "center_location"
+    PREFERENCE_AREA = "preference_area"
+    PREFERENCE_SUBWAY = "preference_subway"
 
 
 class Meeting(Base):
@@ -21,17 +20,27 @@ class Meeting(Base):
     __tablename__ = "meetings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    title = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
-    purpose = Column(Enum(MeetingPurpose), nullable=False)
+    name = Column(String(255), nullable=False)  # 약속 이름
+    creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Host
     
-    # 약속 생성자
-    creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # 약속 목적 (string[])
+    purpose = Column(ARRAY(String), nullable=False)  # ['dining', 'drink']
     
-    # 약속 상태
-    is_confirmed = Column(Boolean, default=False)  # 약속 확정 여부
-    confirmed_at = Column(DateTime, nullable=True)  # 확정된 약속 시간
+    # 장소 관련 설정
+    is_one_place = Column(Boolean, nullable=True)  # 한 곳에서 해결 여부
+    location_choice_type = Column(Enum(LocationChoiceType), nullable=True)  # center_location, preference_area, preference_subway
+    location_choice_value = Column(String(255), nullable=True)  # {"강남구", "강동구", "마포구"} || {"강남역", "설대입구역", "구디역"} || {직접입력한값}
+    preference_place = Column(JSON, nullable=True)  # {"mood": "대화 나누기 좋은", "food": "한식", "condition": "주차"}
+    
+    # 약속 설정
+    deadline = Column(DateTime, nullable=True)  # 마감 시간
+    expected_participant_count = Column(Integer, nullable=True)  # 예상 참가 인원
+    share_code = Column(String(255), nullable=True, unique=True, index=True)  # 공유 코드
+    
+    # 약속 확정 정보
+    confirmed_time = Column(DateTime, nullable=True)  # 확정된 약속 시간
     confirmed_location = Column(String(255), nullable=True)  # 확정된 장소
+    confirmed_at = Column(DateTime, nullable=True)  # 주최자가 "확정하기!" 누른 시간
     
     # 메타 정보
     created_at = Column(DateTime, default=datetime.utcnow)

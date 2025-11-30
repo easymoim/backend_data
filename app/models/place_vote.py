@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Boolean, ForeignKey, DateTime, Text, UniqueConstraint
+from sqlalchemy import Column, Boolean, ForeignKey, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -7,12 +7,9 @@ from datetime import datetime
 from app.database import Base
 
 
-class TimeVote(Base):
-    """시간 투표 모델"""
-    __tablename__ = "time_votes"
-    __table_args__ = (
-        UniqueConstraint('participant_id', 'time_candidate_id', name='uq_participant_time_candidate'),
-    )
+class PlaceVote(Base):
+    """장소 투표 모델"""
+    __tablename__ = "place_votes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     participant_id = Column(UUID(as_uuid=True), ForeignKey("participants.id"), nullable=False, index=True)
@@ -20,7 +17,7 @@ class TimeVote(Base):
     time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidates.id"), nullable=False, index=True)
     
     # 투표 정보
-    is_available = Column(Boolean, nullable=False, default=True)  # 가능 여부 (True: 가능, False: 불가능)
+    is_available = Column(Boolean, nullable=False, default=True)  # 가능 여부
     memo = Column(Text, nullable=True)  # 메모
     
     # 메타 정보
@@ -28,7 +25,7 @@ class TimeVote(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 관계
-    participant = relationship("Participant", back_populates="time_votes")
+    participant = relationship("Participant")
     meeting = relationship("Meeting")
-    time_candidate = relationship("MeetingTimeCandidate", back_populates="votes")
+    time_candidate = relationship("MeetingTimeCandidate")
 
