@@ -40,7 +40,10 @@ def create_time_vote(db: Session, vote: TimeVoteCreate) -> TimeVote:
     
     if existing_vote:
         # 기존 투표 업데이트
+        existing_vote.time_list = vote.time_list
         existing_vote.is_available = vote.is_available
+        if hasattr(vote, 'memo'):
+            existing_vote.memo = vote.memo
         db.commit()
         db.refresh(existing_vote)
         # 투표 수 업데이트
@@ -52,7 +55,9 @@ def create_time_vote(db: Session, vote: TimeVoteCreate) -> TimeVote:
         participant_id=vote.participant_id,
         meeting_id=vote.meeting_id,
         time_candidate_id=vote.time_candidate_id,
+        time_list=vote.time_list,
         is_available=vote.is_available,
+        memo=getattr(vote, 'memo', None),
     )
     db.add(db_vote)
     db.commit()
@@ -68,7 +73,13 @@ def update_time_vote(db: Session, vote_id: UUID, vote_update: TimeVoteUpdate) ->
     if not db_vote:
         return None
     
-    db_vote.is_available = vote_update.is_available
+    if vote_update.time_list is not None:
+        db_vote.time_list = vote_update.time_list
+    if vote_update.is_available is not None:
+        db_vote.is_available = vote_update.is_available
+    if vote_update.memo is not None:
+        db_vote.memo = vote_update.memo
+    
     db.commit()
     db.refresh(db_vote)
     # 투표 수 업데이트

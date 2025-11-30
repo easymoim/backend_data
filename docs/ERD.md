@@ -129,20 +129,16 @@ CREATE TABLE participant (
 
 **테이블 설명:**
 - 모임의 시간 후보와 각 시간에 대한 투표 수를 저장하는 테이블입니다.
-- `candidate_time`은 JSONB 형식으로 여러 시간과 각 시간의 투표 수를 저장합니다.
-- 예: `{"25.11.11.09:00": 3, "25.11.11.14:00": 2}` → 09:00에 3명이 투표, 14:00에 2명이 투표
+- `candidate_time`: 각 시간별 투표 수를 JSONB 형식으로 저장합니다.
+- 예: `{"2025-11-01 02:00": 3, "2025-11-01 03:00": 2, "2025-11-01 09:00": 5}`
 - 참가자들이 `time_vote` 테이블을 통해 투표하면, 이 테이블의 `candidate_time` JSON이 업데이트됩니다.
-- 한 모임당 하나의 레코드만 존재하며, 모든 시간 후보와 투표 수를 하나의 JSON 객체로 관리합니다.
+- 한 모임당 하나의 레코드만 존재하며, 모든 시간 후보와 투표 수를 관리합니다.
 
 | Column | Type | Note | example |
 | --- | --- | --- | --- |
 | id | PK | UUID |  |
 | meeting_id | FK(Meeting.id) |  |  |
-| candidate_time | jsonb | 후보 시간 (여러 시간과 투표 수를 담은 JSON) | {
- "25.11.11.09:00" : 3,
- "25.11.11.14:00" : 2,
- "25.11.12.18:00" : 5
-} |
+| candidate_time | jsonb | 각 시간별 투표 수 | {"2025-11-01 02:00": 3, "2025-11-01 03:00": 2, "2025-11-01 09:00": 5} |
 | created_at | timestamp |  |  |
 
 **SQL:**
@@ -158,11 +154,11 @@ CREATE TABLE meeting_time_candidate (
 ## time_vote (누가 몇시에 투표했는지)
 
 **테이블 설명:**
-- 참가자가 특정 시간 후보에 대해 투표한 정보를 저장하는 테이블입니다.
-- 각 참가자는 여러 시간 후보에 대해 투표할 수 있습니다 (가능/불가능).
-- `is_available`: 해당 시간에 가능한지 여부 (true: 가능, false: 불가능)
+- 참가자가 여러 시간에 대해 한 번에 투표한 정보를 저장하는 테이블입니다.
+- `time_list`: 투표한 시간 목록 배열 (예: ["2025-11-01 02:00", "2025-11-01 03:00", "2025-11-01 09:00"])
+- `is_available`: 이 시간들에 대해 가능한지 여부 (true: 가능, false: 불가능)
 - `memo`: 시간에 대한 추가 메모나 특이사항
-- `participant_id`와 `time_candidate_id`의 조합은 유일해야 합니다 (한 참가자가 같은 시간 후보에 중복 투표 불가).
+- `participant_id`와 `time_candidate_id`의 조합은 유일해야 합니다 (한 참가자가 같은 시간 후보에 대해 하나의 투표만 가능).
 - 이 테이블의 투표 정보가 `meeting_time_candidate` 테이블의 `candidate_time` JSON에 집계됩니다.
 
 | Column | Type | Note |
@@ -171,6 +167,7 @@ CREATE TABLE meeting_time_candidate (
 | participant_id | FK(Participant.id) |  |
 | meeting_id | FK(Meeting.id) |  |
 | time_candidate_id | FK(MeetingTimeCandidate.id) |  |
+| time_list | text[] | 투표한 시간 목록 (예: ["2025-11-01 02:00", "2025-11-01 03:00"]) |
 | is_available | boolean | 가능 여부 |
 | memo | text | 메모 |
 | created_at | timestamp |  |
@@ -183,6 +180,7 @@ CREATE TABLE time_vote (
     participant_id UUID NOT NULL REFERENCES participant(id) ON DELETE CASCADE,
     meeting_id UUID NOT NULL REFERENCES meeting(id) ON DELETE CASCADE,
     time_candidate_id UUID NOT NULL REFERENCES meeting_time_candidate(id) ON DELETE CASCADE,
+    time_list TEXT[] NOT NULL,
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
     memo TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

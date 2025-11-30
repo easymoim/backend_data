@@ -14,7 +14,7 @@ class MeetingTimeCandidate(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
     
-    # 시간 후보 (JSON 형식: {"가능한 시간": "vote_count", "25.11.11.09:00": 3})
+    # 각 시간별 투표 수 (JSON 형식: {"2025-11-01 02:00": 3, "2025-11-01 03:00": 2})
     candidate_time = Column(JSON, nullable=False)
     
     # 메타 정보

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Boolean, ForeignKey, DateTime, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -18,6 +18,7 @@ class TimeVote(Base):
     participant_id = Column(UUID(as_uuid=True), ForeignKey("participant.id"), nullable=False, index=True)
     meeting_id = Column(UUID(as_uuid=True), ForeignKey("meeting.id"), nullable=False, index=True)
     time_candidate_id = Column(UUID(as_uuid=True), ForeignKey("meeting_time_candidate.id"), nullable=False, index=True)
+    time_list = Column(ARRAY(Text), nullable=False)  # 투표한 시간 목록 (예: ["2025-11-01 02:00", "2025-11-01 03:00"])
     
     # 투표 정보
     is_available = Column(Boolean, nullable=False, default=True)  # 가능 여부 (True: 가능, False: 불가능)
