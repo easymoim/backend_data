@@ -36,6 +36,7 @@ class Meeting(Base):
     deadline = Column(DateTime, nullable=True)  # 마감 시간
     expected_participant_count = Column(Integer, nullable=True)  # 예상 참가 인원
     share_code = Column(String(255), nullable=True, unique=True, index=True)  # 공유 코드
+    status = Column(String(50), nullable=True)  # 약속 상태
     
     # 약속 확정 정보
     confirmed_time = Column(DateTime, nullable=True)  # 확정된 약속 시간

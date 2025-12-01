@@ -22,6 +22,7 @@ class MeetingCreate(MeetingBase):
     deadline: Optional[datetime] = None
     expected_participant_count: Optional[int] = None
     share_code: Optional[str] = None
+    status: Optional[str] = None
 
 
 class MeetingUpdate(BaseModel):
@@ -34,6 +35,7 @@ class MeetingUpdate(BaseModel):
     preference_place: Optional[dict] = None
     deadline: Optional[datetime] = None
     expected_participant_count: Optional[int] = None
+    status: Optional[str] = None
     confirmed_time: Optional[datetime] = None
     confirmed_location: Optional[str] = None
     confirmed_at: Optional[datetime] = None
@@ -50,6 +52,7 @@ class MeetingResponse(MeetingBase):
     deadline: Optional[datetime] = None
     expected_participant_count: Optional[int] = None
     share_code: Optional[str] = None
+    status: Optional[str] = None
     confirmed_time: Optional[datetime] = None
     confirmed_location: Optional[str] = None
     confirmed_at: Optional[datetime] = None
