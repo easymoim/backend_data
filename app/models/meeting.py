@@ -37,6 +37,7 @@ class Meeting(Base):
     expected_participant_count = Column(Integer, nullable=True)  # 예상 참가 인원
     share_code = Column(String(255), nullable=True, unique=True, index=True)  # 공유 코드
     status = Column(String(50), nullable=True)  # 모임 상태
+    available_times = Column(ARRAY(DateTime), nullable=True)  # 주최자가 선택한 가능한 시간 목록 (예: ["2025-11-10 09:00", "2025-11-10 10:00", "2025-11-11 08:00"])
     
     # 모임 확정 정보
     confirmed_time = Column(DateTime, nullable=True)  # 확정된 모임 시간

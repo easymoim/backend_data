@@ -55,7 +55,8 @@ CREATE TABLE user (
 | deadline | timestamp | 2025-11-27 23:59 |  |
 | expected_participant_count | int | 예상 참가 인원 |  |
 | share_code | varchar | 공유 코드 |  |
-| status | varchar | 모임 상태 |  |
+| status | varchar | 모임 상태 (time_voting, place_voting, confirmed) | time_voting |
+| available_times | timestamp[] | 주최자가 선택한 가능한 시간 목록 | ["2025-11-10 09:00", "2025-11-10 10:00", "2025-11-11 08:00"] |
 | confirmed_time | timestamp | 확정된 모임 시간 |  |
 | confirmed_location | varchar | 확정된 장소 |  |
 | confirmed_at | timestamp | 주최자가 "확정하기!" 누른 시간 |  |
@@ -77,6 +78,7 @@ CREATE TABLE meeting (
     expected_participant_count INTEGER,
     share_code VARCHAR(255) UNIQUE,
     status VARCHAR(50),
+    available_times TIMESTAMP[],
     confirmed_time TIMESTAMP,
     confirmed_location VARCHAR(255),
     confirmed_at TIMESTAMP,

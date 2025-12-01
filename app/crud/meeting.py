@@ -48,6 +48,7 @@ def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meet
         expected_participant_count=meeting.expected_participant_count,
         share_code=meeting.share_code,
         status=meeting.status,
+        available_times=meeting.available_times,
     )
     db.add(db_meeting)
     db.commit()
@@ -83,6 +84,8 @@ def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate)
         db_meeting.expected_participant_count = meeting_update.expected_participant_count
     if meeting_update.status is not None:
         db_meeting.status = meeting_update.status
+    if meeting_update.available_times is not None:
+        db_meeting.available_times = meeting_update.available_times
     if meeting_update.confirmed_time is not None:
         db_meeting.confirmed_time = meeting_update.confirmed_time
     if meeting_update.confirmed_location is not None:

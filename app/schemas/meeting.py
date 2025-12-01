@@ -23,6 +23,7 @@ class MeetingCreate(MeetingBase):
     expected_participant_count: Optional[int] = None
     share_code: Optional[str] = None
     status: Optional[str] = None
+    available_times: Optional[List[datetime]] = None  # 주최자가 선택한 가능한 시간 목록
 
 
 class MeetingUpdate(BaseModel):
@@ -36,6 +37,7 @@ class MeetingUpdate(BaseModel):
     deadline: Optional[datetime] = None
     expected_participant_count: Optional[int] = None
     status: Optional[str] = None
+    available_times: Optional[List[datetime]] = None  # 주최자가 선택한 가능한 시간 목록
     confirmed_time: Optional[datetime] = None
     confirmed_location: Optional[str] = None
     confirmed_at: Optional[datetime] = None
@@ -53,6 +55,7 @@ class MeetingResponse(MeetingBase):
     expected_participant_count: Optional[int] = None
     share_code: Optional[str] = None
     status: Optional[str] = None
+    available_times: Optional[List[datetime]] = None  # 주최자가 선택한 가능한 시간 목록
     confirmed_time: Optional[datetime] = None
     confirmed_location: Optional[str] = None
     confirmed_at: Optional[datetime] = None
