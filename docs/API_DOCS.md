@@ -810,6 +810,286 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 ---
 
+## 리뷰 (Reviews)
+
+모임 완료 후 참가자들이 작성하는 리뷰를 관리하는 API입니다.
+
+### 리뷰 생성
+
+**POST** `/reviews`
+
+새 리뷰를 생성합니다.
+
+**Request Body:**
+```json
+{
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 0
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 0,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": {
+    "id": 1,
+    "name": "홍길동",
+    "email": "user@example.com",
+    "oauth_provider": "kakao",
+    "oauth_id": "123456789",
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00",
+    "updated_at": "2025-01-01T00:00:00"
+  }
+}
+```
+
+### 모든 리뷰 목록 조회
+
+**GET** `/reviews?skip=0&limit=100`
+
+모든 리뷰 목록을 조회합니다.
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 리뷰 조회
+
+**GET** `/reviews/{review_id}`
+
+특정 리뷰를 조회합니다.
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 모임별 리뷰 목록 조회
+
+**GET** `/reviews/meeting/{meeting_id}?skip=0&limit=100`
+
+특정 모임의 모든 리뷰를 조회합니다.
+
+**Path Parameters:**
+- `meeting_id` (UUID): 모임 ID
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 사용자별 리뷰 목록 조회
+
+**GET** `/reviews/user/{user_id}?skip=0&limit=100`
+
+특정 사용자가 작성한 모든 리뷰를 조회합니다.
+
+**Path Parameters:**
+- `user_id` (int): 사용자 ID
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 리뷰 정보 업데이트
+
+**PUT** `/reviews/{review_id}`
+
+리뷰 정보를 업데이트합니다.
+
+**Request Body:**
+```json
+{
+  "rating": 4,
+  "text": "수정된 리뷰 내용입니다.",
+  "image_list": [
+    "https://example.com/new-image.jpg"
+  ]
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 4,
+  "image_list": ["https://example.com/new-image.jpg"],
+  "text": "수정된 리뷰 내용입니다.",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T11:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 삭제
+
+**DELETE** `/reviews/{review_id}`
+
+리뷰를 소프트 삭제합니다. (`deleted_at` 필드에 현재 시간이 설정됩니다)
+
+**Response (204 No Content):**
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 좋아요
+
+**POST** `/reviews/{review_id}/like`
+
+리뷰에 좋아요를 추가합니다. (`like_count`가 1 증가합니다)
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 11,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 좋아요 취소
+
+**DELETE** `/reviews/{review_id}/like`
+
+리뷰의 좋아요를 취소합니다. (`like_count`가 1 감소합니다, 최소 0)
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+**참고사항:**
+- `rating`: 평가 점수는 1-5 사이의 정수입니다.
+- `image_list`: 이미지 URL 리스트입니다. Supabase Storage를 사용할 수 있습니다.
+- `deleted_at`: 소프트 삭제된 리뷰는 조회되지 않습니다 (`deleted_at IS NULL`인 리뷰만 조회됩니다).
+
+---
+
 ## 추가 리소스
 
 - **Swagger UI**: `http://localhost:8000/docs` - 인터랙티브 API 문서

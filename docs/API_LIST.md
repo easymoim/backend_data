@@ -75,3 +75,15 @@
 - `PUT /api/v1/place-votes/{vote_id}` - 장소 투표 업데이트
 - `DELETE /api/v1/place-votes/{vote_id}` - 장소 투표 삭제
 
+## 리뷰 (Reviews)
+
+- `POST /api/v1/reviews` - 리뷰 생성
+- `GET /api/v1/reviews` - 모든 리뷰 목록 조회
+- `GET /api/v1/reviews/{review_id}` - 리뷰 조회
+- `GET /api/v1/reviews/meeting/{meeting_id}` - 모임별 리뷰 목록 조회
+- `GET /api/v1/reviews/user/{user_id}` - 사용자별 리뷰 목록 조회
+- `PUT /api/v1/reviews/{review_id}` - 리뷰 정보 업데이트
+- `DELETE /api/v1/reviews/{review_id}` - 리뷰 삭제 (소프트 삭제)
+- `POST /api/v1/reviews/{review_id}/like` - 리뷰 좋아요
+- `DELETE /api/v1/reviews/{review_id}/like` - 리뷰 좋아요 취소
+
