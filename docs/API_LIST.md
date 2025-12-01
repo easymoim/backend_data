@@ -15,21 +15,21 @@
 - `GET /api/v1/users/{user_id}` - 사용자 조회
 - `PUT /api/v1/users/{user_id}` - 사용자 정보 업데이트
 
-## 약속 (Meetings)
+## 모임 (Meetings)
 
-- `POST /api/v1/meetings?creator_id={user_id}` - 약속 생성
-- `GET /api/v1/meetings` - 모든 약속 목록 조회
-- `GET /api/v1/meetings/creator/{creator_id}` - 생성자별 약속 목록 조회
-- `GET /api/v1/meetings/share-code/{share_code}` - 공유 코드로 약속 조회
-- `GET /api/v1/meetings/{meeting_id}` - 약속 상세 조회
-- `PUT /api/v1/meetings/{meeting_id}` - 약속 정보 업데이트
-- `DELETE /api/v1/meetings/{meeting_id}` - 약속 삭제
+- `POST /api/v1/meetings?creator_id={user_id}` - 모임 생성
+- `GET /api/v1/meetings` - 모든 모임 목록 조회
+- `GET /api/v1/meetings/creator/{creator_id}` - 생성자별 모임 목록 조회
+- `GET /api/v1/meetings/share-code/{share_code}` - 공유 코드로 모임 조회
+- `GET /api/v1/meetings/{meeting_id}` - 모임 상세 조회
+- `PUT /api/v1/meetings/{meeting_id}` - 모임 정보 업데이트
+- `DELETE /api/v1/meetings/{meeting_id}` - 모임 삭제
 
 ## 참가자 (Participants)
 
 - `POST /api/v1/participants` - 참가자 추가 (로그인/비로그인 가능)
-- `GET /api/v1/participants/meeting/{meeting_id}` - 약속별 참가자 목록 조회
-- `GET /api/v1/participants/user/{user_id}` - 사용자별 참가한 약속 목록 조회
+- `GET /api/v1/participants/meeting/{meeting_id}` - 모임별 참가자 목록 조회
+- `GET /api/v1/participants/user/{user_id}` - 사용자별 참가한 모임 목록 조회
 - `GET /api/v1/participants/{participant_id}` - 참가자 조회
 - `PUT /api/v1/participants/{participant_id}` - 참가자 정보 업데이트
 - `DELETE /api/v1/participants/{participant_id}` - 참가자 삭제
@@ -37,7 +37,7 @@
 ## 시간 후보 (Time Candidates)
 
 - `POST /api/v1/time-candidates` - 시간 후보 생성
-- `GET /api/v1/time-candidates/meeting/{meeting_id}` - 약속별 시간 후보 목록 조회
+- `GET /api/v1/time-candidates/meeting/{meeting_id}` - 모임별 시간 후보 목록 조회
 - `GET /api/v1/time-candidates/{candidate_id}` - 시간 후보 조회
 - `DELETE /api/v1/time-candidates/{candidate_id}` - 시간 후보 삭제
 
@@ -61,7 +61,7 @@
 ## 장소 후보 (Place Candidates)
 
 - `POST /api/v1/place-candidates` - 장소 후보 생성 (LLM 추천 장소)
-- `GET /api/v1/place-candidates/meeting/{meeting_id}` - 약속별 장소 후보 목록 조회
+- `GET /api/v1/place-candidates/meeting/{meeting_id}` - 모임별 장소 후보 목록 조회
 - `GET /api/v1/place-candidates/{candidate_id}` - 장소 후보 조회
 - `PUT /api/v1/place-candidates/{candidate_id}` - 장소 후보 정보 업데이트
 - `DELETE /api/v1/place-candidates/{candidate_id}` - 장소 후보 삭제
@@ -70,7 +70,7 @@
 
 - `POST /api/v1/place-votes` - 장소 투표 생성/업데이트 (중복 시 자동 업데이트)
 - `GET /api/v1/place-votes/participant/{participant_id}` - 참가자별 장소 투표 목록 조회
-- `GET /api/v1/place-votes/meeting/{meeting_id}` - 약속별 장소 투표 목록 조회
+- `GET /api/v1/place-votes/meeting/{meeting_id}` - 모임별 장소 투표 목록 조회
 - `GET /api/v1/place-votes/{vote_id}` - 장소 투표 조회
 - `PUT /api/v1/place-votes/{vote_id}` - 장소 투표 업데이트
 - `DELETE /api/v1/place-votes/{vote_id}` - 장소 투표 삭제

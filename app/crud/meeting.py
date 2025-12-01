@@ -6,27 +6,27 @@ from app.schemas.meeting import MeetingCreate, MeetingUpdate
 
 
 def get_meeting(db: Session, meeting_id: UUID) -> Optional[Meeting]:
-    """약속 ID로 조회"""
+    """모임 ID로 조회"""
     return db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
 
 def get_meetings_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """생성자별 약속 목록 조회"""
+    """생성자별 모임 목록 조회"""
     return db.query(Meeting).filter(Meeting.creator_id == creator_id).offset(skip).limit(limit).all()
 
 
 def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """모든 약속 목록 조회"""
+    """모든 모임 목록 조회"""
     return db.query(Meeting).offset(skip).limit(limit).all()
 
 
 def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
-    """공유 코드로 약속 조회"""
+    """공유 코드로 모임 조회"""
     return db.query(Meeting).filter(Meeting.share_code == share_code).first()
 
 
 def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meeting:
-    """새 약속 생성"""
+    """새 모임 생성"""
     # location_choice_type 문자열을 Enum으로 변환
     location_choice_type_enum = None
     if meeting.location_choice_type:
@@ -56,7 +56,7 @@ def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meet
 
 
 def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate) -> Optional[Meeting]:
-    """약속 정보 업데이트"""
+    """모임 정보 업데이트"""
     db_meeting = get_meeting(db, meeting_id)
     if not db_meeting:
         return None
@@ -96,7 +96,7 @@ def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate)
 
 
 def delete_meeting(db: Session, meeting_id: UUID) -> bool:
-    """약속 삭제"""
+    """모임 삭제"""
     db_meeting = get_meeting(db, meeting_id)
     if not db_meeting:
         return False

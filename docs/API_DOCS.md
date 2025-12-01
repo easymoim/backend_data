@@ -117,13 +117,13 @@
 
 ---
 
-## 약속 (Meetings)
+## 모임 (Meetings)
 
-### 약속 생성
+### 모임 생성
 
 **POST** `/meetings?creator_id={user_id}`
 
-새로운 약속을 생성합니다.
+새로운 모임을 생성합니다.
 
 **Query Parameters:**
 - `creator_id` (required): 주최자 사용자 ID
@@ -175,11 +175,11 @@
 }
 ```
 
-### 약속 목록 조회
+### 모임 목록 조회
 
 **GET** `/meetings?skip=0&limit=100`
 
-모든 약속 목록을 조회합니다.
+모든 모임 목록을 조회합니다.
 
 **Query Parameters:**
 - `skip` (optional, default: 0): 건너뛸 개수
@@ -197,34 +197,34 @@
 ]
 ```
 
-### 생성자별 약속 목록 조회
+### 생성자별 모임 목록 조회
 
 **GET** `/meetings/creator/{creator_id}?skip=0&limit=100`
 
-특정 사용자가 생성한 약속 목록을 조회합니다.
+특정 사용자가 생성한 모임 목록을 조회합니다.
 
-### 공유 코드로 약속 조회
+### 공유 코드로 모임 조회
 
 **GET** `/meetings/share-code/{share_code}`
 
-공유 코드를 사용하여 약속을 조회합니다. (비로그인 사용자가 약속에 참가할 때 사용)
+공유 코드를 사용하여 모임을 조회합니다. (비로그인 사용자가 모임에 참가할 때 사용)
 
 **예시:**
 ```
 GET /meetings/share-code/ABC123
 ```
 
-### 약속 조회
+### 모임 조회
 
 **GET** `/meetings/{meeting_id}`
 
-특정 약속의 상세 정보를 조회합니다.
+특정 모임의 상세 정보를 조회합니다.
 
-### 약속 정보 업데이트
+### 모임 정보 업데이트
 
 **PUT** `/meetings/{meeting_id}`
 
-약속 정보를 업데이트합니다. (확정 시간, 확정 장소 등)
+모임 정보를 업데이트합니다. (확정 시간, 확정 장소 등)
 
 **Request Body:**
 ```json
@@ -235,11 +235,11 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-### 약속 삭제
+### 모임 삭제
 
 **DELETE** `/meetings/{meeting_id}`
 
-약속을 삭제합니다. (관련된 모든 데이터도 함께 삭제됩니다)
+모임을 삭제합니다. (관련된 모든 데이터도 함께 삭제됩니다)
 
 ---
 
@@ -249,7 +249,7 @@ GET /meetings/share-code/ABC123
 
 **POST** `/participants`
 
-약속에 참가자를 추가합니다. (로그인/비로그인 모두 가능)
+모임에 참가자를 추가합니다. (로그인/비로그인 모두 가능)
 
 **Request Body:**
 ```json
@@ -289,11 +289,11 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-### 약속별 참가자 목록 조회
+### 모임별 참가자 목록 조회
 
 **GET** `/participants/meeting/{meeting_id}`
 
-특정 약속의 참가자 목록을 조회합니다.
+특정 모임의 참가자 목록을 조회합니다.
 
 **Response (200 OK):**
 ```json
@@ -308,11 +308,11 @@ GET /meetings/share-code/ABC123
 ]
 ```
 
-### 사용자별 참가한 약속 목록 조회
+### 사용자별 참가한 모임 목록 조회
 
 **GET** `/participants/user/{user_id}`
 
-특정 사용자가 참가한 모든 약속 목록을 조회합니다.
+특정 사용자가 참가한 모든 모임 목록을 조회합니다.
 
 ### 참가자 조회
 
@@ -341,7 +341,7 @@ GET /meetings/share-code/ABC123
 
 **DELETE** `/participants/{participant_id}`
 
-참가자를 약속에서 제거합니다.
+참가자를 모임에서 제거합니다.
 
 ---
 
@@ -351,7 +351,7 @@ GET /meetings/share-code/ABC123
 
 **POST** `/time-candidates`
 
-약속의 시간 후보를 생성합니다. `candidate_time`은 여러 시간과 각 시간의 투표 수를 JSON으로 저장합니다.
+모임의 시간 후보를 생성합니다. `candidate_time`은 여러 시간과 각 시간의 투표 수를 JSON으로 저장합니다.
 
 **Request Body:**
 ```json
@@ -379,11 +379,11 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-### 약속별 시간 후보 목록 조회
+### 모임별 시간 후보 목록 조회
 
 **GET** `/time-candidates/meeting/{meeting_id}`
 
-특정 약속의 시간 후보 목록을 조회합니다.
+특정 모임의 시간 후보 목록을 조회합니다.
 
 ### 시간 후보 조회
 
@@ -571,11 +571,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 }
 ```
 
-### 약속별 장소 후보 목록 조회
+### 모임별 장소 후보 목록 조회
 
 **GET** `/place-candidates/meeting/{meeting_id}`
 
-특정 약속의 장소 후보 목록을 조회합니다.
+특정 모임의 장소 후보 목록을 조회합니다.
 
 ### 장소 후보 조회
 
@@ -638,11 +638,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 특정 참가자가 투표한 모든 장소 투표 목록을 조회합니다.
 
-### 약속별 장소 투표 목록 조회
+### 모임별 장소 투표 목록 조회
 
 **GET** `/place-votes/meeting/{meeting_id}`
 
-특정 약속의 모든 장소 투표 목록을 조회합니다.
+특정 모임의 모든 장소 투표 목록을 조회합니다.
 
 ### 장소 투표 조회
 
@@ -671,7 +671,7 @@ LLM이 추천한 장소 후보를 생성합니다.
 **404 Not Found:**
 ```json
 {
-  "detail": "약속을 찾을 수 없습니다."
+  "detail": "모임을 찾을 수 없습니다."
 }
 ```
 
@@ -693,11 +693,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 ## 일반적인 사용 흐름
 
-### 1. 약속 생성 및 참가
+### 1. 모임 생성 및 참가
 
 1. 사용자 로그인: `POST /auth/kakao/login`
-2. 약속 생성: `POST /meetings?creator_id={user_id}`
-3. 참가자 추가: `POST /participants` (공유 코드로 약속 조회 후)
+2. 모임 생성: `POST /meetings?creator_id={user_id}`
+3. 참가자 추가: `POST /participants` (공유 코드로 모임 조회 후)
 
 ### 2. 시간 투표
 
@@ -709,11 +709,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 1. 장소 후보 생성: `POST /place-candidates` (LLM 추천 후)
 2. 참가자들이 장소 투표: `POST /place-votes`
-3. 약속별 장소 투표 조회: `GET /place-votes/meeting/{meeting_id}`
+3. 모임별 장소 투표 조회: `GET /place-votes/meeting/{meeting_id}`
 
-### 4. 약속 확정
+### 4. 모임 확정
 
-1. 약속 정보 업데이트: `PUT /meetings/{meeting_id}`
+1. 모임 정보 업데이트: `PUT /meetings/{meeting_id}`
    - `confirmed_time`, `confirmed_location`, `confirmed_at` 설정
 
 ---
@@ -721,7 +721,7 @@ LLM이 추천한 장소 후보를 생성합니다.
 ## 주의사항
 
 1. **UUID 형식**: `meeting_id`, `participant_id`, `candidate_id` 등은 UUID 형식입니다.
-2. **공유 코드**: 비로그인 사용자도 공유 코드로 약속에 참가할 수 있습니다.
+2. **공유 코드**: 비로그인 사용자도 공유 코드로 모임에 참가할 수 있습니다.
 3. **투표 중복 방지**: `time_vote`와 `place_vote`는 `participant_id`와 `candidate_id` 조합이 유일해야 합니다.
 4. **자동 업데이트**: 투표 생성/업데이트 시 `meeting_time_candidate`의 `candidate_time` JSON이 자동으로 업데이트되어야 합니다. (현재는 수동 업데이트 필요)
 

@@ -15,12 +15,12 @@ router = APIRouter()
 @router.post("/", response_model=MeetingTimeCandidateResponse, status_code=status.HTTP_201_CREATED)
 def create_time_candidate(candidate: MeetingTimeCandidateCreate, db: Session = Depends(get_db)):
     """새 시간 후보 생성"""
-    # 약속 존재 확인
+    # 모임 존재 확인
     db_meeting = crud.meeting.get_meeting(db, meeting_id=candidate.meeting_id)
     if not db_meeting:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="약속을 찾을 수 없습니다."
+            detail="모임을 찾을 수 없습니다."
         )
     
     return crud.meeting_time_candidate.create_time_candidate(db=db, candidate=candidate)
@@ -28,7 +28,7 @@ def create_time_candidate(candidate: MeetingTimeCandidateCreate, db: Session = D
 
 @router.get("/meeting/{meeting_id}", response_model=List[MeetingTimeCandidateResponse])
 def read_time_candidates_by_meeting(meeting_id: UUID, db: Session = Depends(get_db)):
-    """약속별 시간 후보 목록 조회"""
+    """모임별 시간 후보 목록 조회"""
     candidates = crud.meeting_time_candidate.get_time_candidates_by_meeting(db, meeting_id=meeting_id)
     return candidates
 

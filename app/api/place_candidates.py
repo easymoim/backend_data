@@ -16,12 +16,12 @@ router = APIRouter()
 @router.post("/", response_model=PlaceCandidateResponse, status_code=status.HTTP_201_CREATED)
 def create_place_candidate(candidate: PlaceCandidateCreate, db: Session = Depends(get_db)):
     """새 장소 후보 생성"""
-    # 약속 존재 확인
+    # 모임 존재 확인
     db_meeting = crud.meeting.get_meeting(db, meeting_id=candidate.meeting_id)
     if not db_meeting:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="약속을 찾을 수 없습니다."
+            detail="모임을 찾을 수 없습니다."
         )
     
     return crud.place_candidate.create_place_candidate(db=db, candidate=candidate)
@@ -29,7 +29,7 @@ def create_place_candidate(candidate: PlaceCandidateCreate, db: Session = Depend
 
 @router.get("/meeting/{meeting_id}", response_model=List[PlaceCandidateResponse])
 def read_place_candidates_by_meeting(meeting_id: UUID, db: Session = Depends(get_db)):
-    """약속별 장소 후보 목록 조회"""
+    """모임별 장소 후보 목록 조회"""
     candidates = crud.place_candidate.get_place_candidates_by_meeting(db, meeting_id=meeting_id)
     return candidates
 

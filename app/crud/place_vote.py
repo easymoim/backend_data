@@ -16,7 +16,7 @@ def get_place_votes_by_participant(db: Session, participant_id: UUID) -> List[Pl
 
 
 def get_place_votes_by_meeting(db: Session, meeting_id: UUID) -> List[PlaceVote]:
-    """약속별 장소 투표 목록 조회"""
+    """모임별 장소 투표 목록 조회"""
     return db.query(PlaceVote).filter(PlaceVote.meeting_id == meeting_id).all()
 
 

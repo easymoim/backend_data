@@ -11,12 +11,12 @@ def get_participant(db: Session, participant_id: UUID) -> Optional[Participant]:
 
 
 def get_participants_by_meeting(db: Session, meeting_id: UUID) -> List[Participant]:
-    """약속별 참가자 목록 조회"""
+    """모임별 참가자 목록 조회"""
     return db.query(Participant).filter(Participant.meeting_id == meeting_id).all()
 
 
 def get_participants_by_user(db: Session, user_id: int) -> List[Participant]:
-    """사용자별 참가한 약속 목록 조회"""
+    """사용자별 참가한 모임 목록 조회"""
     return db.query(Participant).filter(Participant.user_id == user_id).all()
 
 

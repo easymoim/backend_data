@@ -28,11 +28,11 @@ def create_time_vote(vote: TimeVoteCreate, db: Session = Depends(get_db)):
             detail="시간 후보를 찾을 수 없습니다."
         )
     
-    # 약속 ID 일치 확인
+    # 모임 ID 일치 확인
     if db_participant.meeting_id != vote.meeting_id or db_candidate.meeting_id != vote.meeting_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="참가자, 시간 후보, 약속 ID가 일치하지 않습니다."
+            detail="참가자, 시간 후보, 모임 ID가 일치하지 않습니다."
         )
     
     return crud.time_vote.create_time_vote(db=db, vote=vote)

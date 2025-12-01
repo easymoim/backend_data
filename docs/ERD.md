@@ -34,7 +34,7 @@ CREATE TABLE user (
 ## meeting
 
 **테이블 설명:**
-- 모임(약속)의 전체 정보를 저장하는 핵심 테이블입니다.
+- 모임의 전체 정보를 저장하는 핵심 테이블입니다.
 - 주최자(creator_id)가 모임을 생성하고, 참가자들이 시간과 장소에 투표합니다.
 - `purpose`: 모임 목적을 배열로 저장 (예: ['dining', 'drink'])
 - `location_choice_type`: 위치 선택 방식 (중심 위치, 선호 지역, 선호 지하철역)
@@ -55,7 +55,8 @@ CREATE TABLE user (
 | deadline | timestamp | 2025-11-27 23:59 |  |
 | expected_participant_count | int | 예상 참가 인원 |  |
 | share_code | varchar | 공유 코드 |  |
-| confirmed_time | timestamp | 확정된 약속 시간 |  |
+| status | varchar | 모임 상태 |  |
+| confirmed_time | timestamp | 확정된 모임 시간 |  |
 | confirmed_location | varchar | 확정된 장소 |  |
 | confirmed_at | timestamp | 주최자가 "확정하기!" 누른 시간 |  |
 | created_at | timestamp |  |  |
@@ -75,6 +76,7 @@ CREATE TABLE meeting (
     deadline TIMESTAMP,
     expected_participant_count INTEGER,
     share_code VARCHAR(255) UNIQUE,
+    status VARCHAR(50),
     confirmed_time TIMESTAMP,
     confirmed_location VARCHAR(255),
     confirmed_at TIMESTAMP,
