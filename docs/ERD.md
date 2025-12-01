@@ -318,4 +318,43 @@ CREATE TABLE place_candidate (
 **참고:**
 - location : 지역, 정확한 위치 (위도 경도) → ex 강남구, 용산구
 - place : 식당 , 카페 → ex 장터, 벳남미식
-- review 관련 테이블 나중에 해주세요 제발제발제발제발
+
+## review
+
+**테이블 설명:**
+- 모임 완료 후 모임에 대한 리뷰를 저장하는 테이블입니다.
+- 참가자들이 모임 후 경험을 공유하고 평가할 수 있습니다.
+- `rating`: 평가 점수 (1-5)
+- `image_list`: 리뷰에 첨부된 이미지 URL 리스트 (fileserver 필요, Supabase에 있음)
+- `text`: 리뷰 텍스트 내용
+- `like_count`: 리뷰 좋아요 수
+- `deleted_at`: 소프트 삭제 시간 (null이면 삭제되지 않음)
+
+| Column | Type | Note |
+| --- | --- | --- |
+| id | PK | UUID |
+| meeting_id | FK(Meeting.id) |  |
+| user_id | FK(User.id) | 리뷰 작성자 |
+| rating | int | 평가 점수 (1-5) |
+| image_list | text[] | 이미지 URL 리스트 [image1, image2, ...] |
+| text | text | 리뷰 텍스트 |
+| like_count | int | 좋아요 수 |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+| deleted_at | timestamp | 소프트 삭제 시간 (null이면 삭제되지 않음) |
+
+**SQL:**
+```sql
+CREATE TABLE review (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID NOT NULL REFERENCES meeting(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    rating INTEGER,
+    image_list TEXT[],
+    text TEXT,
+    like_count INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+```

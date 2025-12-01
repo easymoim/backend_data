@@ -32,4 +32,5 @@ class User(Base):
     # 관계
     meetings = relationship("Meeting", back_populates="creator", cascade="all, delete-orphan")
     participants = relationship("Participant", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
 
