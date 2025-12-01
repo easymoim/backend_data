@@ -14,6 +14,7 @@ from app.models import (
     Place,
     PlaceCandidate,
     PlaceVote,
+    Review,
 )
 from app.api import api_router
 
