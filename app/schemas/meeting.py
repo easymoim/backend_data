@@ -61,6 +61,7 @@ class MeetingResponse(MeetingBase):
     confirmed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    deleted_at: Optional[datetime] = None
     creator: Optional[UserResponse] = None
 
     @field_serializer('location_choice_type')

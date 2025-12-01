@@ -47,6 +47,7 @@ class Meeting(Base):
     # 메타 정보
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)  # 소프트 삭제 시간
 
     # 관계
     creator = relationship("User", back_populates="meetings")

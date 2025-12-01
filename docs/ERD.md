@@ -62,6 +62,7 @@ CREATE TABLE user (
 | confirmed_at | timestamp | 주최자가 "확정하기!" 누른 시간 |  |
 | created_at | timestamp |  |  |
 | updated_at | timestamp |  |  |
+| deleted_at | timestamp | 소프트 삭제 시간 (null이면 삭제되지 않음) |  |
 
 **SQL:**
 ```sql
@@ -83,7 +84,8 @@ CREATE TABLE meeting (
     confirmed_location VARCHAR(255),
     confirmed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 ```
 

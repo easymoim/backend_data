@@ -6,23 +6,34 @@ from app.schemas.meeting import MeetingCreate, MeetingUpdate
 
 
 def get_meeting(db: Session, meeting_id: UUID) -> Optional[Meeting]:
-    """모임 ID로 조회"""
-    return db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    """모임 ID로 조회 (삭제되지 않은 모임만)"""
+    return db.query(Meeting).filter(
+        Meeting.id == meeting_id,
+        Meeting.deleted_at.is_(None)
+    ).first()
 
 
 def get_meetings_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """생성자별 모임 목록 조회"""
-    return db.query(Meeting).filter(Meeting.creator_id == creator_id).offset(skip).limit(limit).all()
+    """생성자별 모임 목록 조회 (삭제되지 않은 모임만)"""
+    return db.query(Meeting).filter(
+        Meeting.creator_id == creator_id,
+        Meeting.deleted_at.is_(None)
+    ).offset(skip).limit(limit).all()
 
 
 def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """모든 모임 목록 조회"""
-    return db.query(Meeting).offset(skip).limit(limit).all()
+    """모든 모임 목록 조회 (삭제되지 않은 모임만)"""
+    return db.query(Meeting).filter(
+        Meeting.deleted_at.is_(None)
+    ).offset(skip).limit(limit).all()
 
 
 def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
-    """공유 코드로 모임 조회"""
-    return db.query(Meeting).filter(Meeting.share_code == share_code).first()
+    """공유 코드로 모임 조회 (삭제되지 않은 모임만)"""
+    return db.query(Meeting).filter(
+        Meeting.share_code == share_code,
+        Meeting.deleted_at.is_(None)
+    ).first()
 
 
 def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meeting:
@@ -99,12 +110,15 @@ def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate)
 
 
 def delete_meeting(db: Session, meeting_id: UUID) -> bool:
-    """모임 삭제"""
+    """모임 소프트 삭제"""
     db_meeting = get_meeting(db, meeting_id)
     if not db_meeting:
         return False
     
-    db.delete(db_meeting)
+    # 소프트 삭제: deleted_at에 현재 시간 설정
+    from datetime import datetime
+    db_meeting.deleted_at = datetime.utcnow()
     db.commit()
+    db.refresh(db_meeting)
     return True
 

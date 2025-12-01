@@ -142,12 +142,27 @@
     "condition": ["주차"]
   },
   "deadline": "2025-11-27T23:59:00",
-  "expected_participant_count": 5
-  // share_code는 선택사항이며, 없으면 null로 저장됩니다
+  "expected_participant_count": 5,
+  "share_code": "ABC123",
+  "status": "time_voting",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00",
+    "2025-11-10T20:00:00",
+    "2025-11-11T08:00:00",
+    "2025-11-11T13:00:00"
+  ]
 }
 ```
 
-**참고:** `share_code`는 선택사항입니다. 요청에 포함하지 않으면 `null`로 저장됩니다.
+**필드 설명:**
+- `share_code`: 선택사항, 없으면 `null`로 저장됩니다
+- `status`: 모임 상태 (선택사항)
+  - `"time_voting"`: 시간 투표 중
+  - `"place_voting"`: 장소 투표 중
+  - `"confirmed"`: 모임 확정
+- `available_times`: 주최자가 선택한 가능한 시간 목록 (배열, 선택사항)
+
 
 **Response (201 Created):**
 ```json
@@ -167,6 +182,14 @@
   "deadline": "2025-11-27T23:59:00",
   "expected_participant_count": 5,
   "share_code": "ABC123",
+  "status": "time_voting",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00",
+    "2025-11-10T20:00:00",
+    "2025-11-11T08:00:00",
+    "2025-11-11T13:00:00"
+  ],
   "confirmed_time": null,
   "confirmed_location": null,
   "confirmed_at": null,
@@ -229,11 +252,26 @@ GET /meetings/share-code/ABC123
 **Request Body:**
 ```json
 {
+  "name": "이지모임 (수정)",
+  "purpose": ["dining"],
+  "status": "confirmed",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00"
+  ],
   "confirmed_time": "2025-11-27T18:00:00",
   "confirmed_location": "강남역 맛집",
   "confirmed_at": "2025-11-20T12:00:00"
 }
 ```
+
+**필드 설명:**
+- 모든 필드는 선택사항입니다. 업데이트할 필드만 포함하면 됩니다.
+- `status`: 모임 상태 업데이트
+  - `"time_voting"`: 시간 투표 중
+  - `"place_voting"`: 장소 투표 중
+  - `"confirmed"`: 모임 확정
+- `available_times`: 주최자가 선택한 가능한 시간 목록 업데이트
 
 ### 모임 삭제
 
@@ -358,12 +396,18 @@ GET /meetings/share-code/ABC123
 {
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "candidate_time": {
-    "25.11.11.09:00": 0,
-    "25.11.11.14:00": 0,
-    "25.11.12.18:00": 0
+    "2025-11-01 02:00": 0,
+    "2025-11-01 03:00": 0,
+    "2025-11-01 09:00": 0
   }
 }
 ```
+
+**필드 설명:**
+- `candidate_time`: 시간별 투표 수를 저장하는 JSON 객체
+  - 키: 시간 문자열 (예: `"2025-11-01 02:00"`)
+  - 값: 해당 시간에 투표한 참가자 수 (초기값: 0)
+  - 투표 생성/수정/삭제 시 자동으로 업데이트됩니다
 
 **Response (201 Created):**
 ```json
@@ -371,9 +415,9 @@ GET /meetings/share-code/ABC123
   "id": "770e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "candidate_time": {
-    "25.11.11.09:00": 0,
-    "25.11.11.14:00": 0,
-    "25.11.12.18:00": 0
+    "2025-11-01 02:00": 0,
+    "2025-11-01 03:00": 0,
+    "2025-11-01 09:00": 0
   },
   "created_at": "2025-01-01T00:00:00"
 }
@@ -413,10 +457,21 @@ GET /meetings/share-code/ABC123
   "participant_id": "660e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "time_candidate_id": "770e8400-e29b-41d4-a716-446655440000",
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00",
+    "2025-11-01 09:00"
+  ],
   "is_available": true,
   "memo": "늦을 수도 있어요"
 }
 ```
+
+**필드 설명:**
+- `time_list`: 투표한 시간 목록 (배열, 필수)
+  - `meeting_time_candidate`의 `candidate_time` JSON에 포함된 시간 문자열 목록
+  - 예: `["2025-11-01 02:00", "2025-11-01 03:00"]`
+- `is_available`: 해당 시간들에 대한 가능 여부 (true: 가능, false: 불가능)
 
 **Response (201 Created):**
 ```json
@@ -425,6 +480,11 @@ GET /meetings/share-code/ABC123
   "participant_id": "660e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "time_candidate_id": "770e8400-e29b-41d4-a716-446655440000",
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00",
+    "2025-11-01 09:00"
+  ],
   "is_available": true,
   "memo": "늦을 수도 있어요",
   "created_at": "2025-01-01T00:00:00",
@@ -432,7 +492,9 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-**참고:** 투표가 생성/업데이트되면 `meeting_time_candidate` 테이블의 `candidate_time` JSON이 자동으로 업데이트되어야 합니다. (현재는 수동 업데이트 필요)
+**참고:** 
+- 투표가 생성/업데이트/삭제되면 `meeting_time_candidate` 테이블의 `candidate_time` JSON이 **자동으로 업데이트**됩니다.
+- 각 시간별로 `is_available=true`이고 `time_list`에 포함된 투표 수가 집계되어 `candidate_time`에 반영됩니다.
 
 ### 참가자별 시간 투표 목록 조회
 
@@ -461,10 +523,18 @@ GET /meetings/share-code/ABC123
 **Request Body:**
 ```json
 {
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00"
+  ],
   "is_available": false,
   "memo": "불가능합니다"
 }
 ```
+
+**필드 설명:**
+- 모든 필드는 선택사항입니다. 업데이트할 필드만 포함하면 됩니다.
+- `time_list`: 투표한 시간 목록 업데이트
 
 ### 시간 투표 삭제
 
@@ -697,13 +767,20 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 1. 사용자 로그인: `POST /auth/kakao/login`
 2. 모임 생성: `POST /meetings?creator_id={user_id}`
+   - `available_times`: 주최자가 선택한 가능한 시간 목록 포함
+   - `status`: 초기 상태 설정 (예: `"time_voting"`)
 3. 참가자 추가: `POST /participants` (공유 코드로 모임 조회 후)
 
 ### 2. 시간 투표
 
 1. 시간 후보 생성: `POST /time-candidates`
+   - `candidate_time`에 `meeting.available_times`의 시간들을 키로 포함
 2. 참가자들이 시간 투표: `POST /time-votes`
+   - `time_list`: 투표할 시간 목록 (배열)
+   - `is_available`: 가능 여부
+   - 투표 수가 자동으로 `candidate_time`에 반영됨
 3. 시간 후보별 투표 조회: `GET /time-votes/candidate/{candidate_id}`
+4. 모임 상태 업데이트: `PUT /meetings/{meeting_id}` - `status: "place_voting"`으로 변경
 
 ### 3. 장소 투표
 
@@ -714,6 +791,7 @@ LLM이 추천한 장소 후보를 생성합니다.
 ### 4. 모임 확정
 
 1. 모임 정보 업데이트: `PUT /meetings/{meeting_id}`
+   - `status: "confirmed"` 설정
    - `confirmed_time`, `confirmed_location`, `confirmed_at` 설정
 
 ---
@@ -723,7 +801,12 @@ LLM이 추천한 장소 후보를 생성합니다.
 1. **UUID 형식**: `meeting_id`, `participant_id`, `candidate_id` 등은 UUID 형식입니다.
 2. **공유 코드**: 비로그인 사용자도 공유 코드로 모임에 참가할 수 있습니다.
 3. **투표 중복 방지**: `time_vote`와 `place_vote`는 `participant_id`와 `candidate_id` 조합이 유일해야 합니다.
-4. **자동 업데이트**: 투표 생성/업데이트 시 `meeting_time_candidate`의 `candidate_time` JSON이 자동으로 업데이트되어야 합니다. (현재는 수동 업데이트 필요)
+4. **자동 업데이트**: 시간 투표 생성/업데이트/삭제 시 `meeting_time_candidate`의 `candidate_time` JSON이 **자동으로 업데이트**됩니다.
+5. **모임 상태**: `status` 필드는 모임의 현재 단계를 나타냅니다.
+   - `"time_voting"`: 시간 투표 중
+   - `"place_voting"`: 장소 투표 중  
+   - `"confirmed"`: 모임 확정
+6. **가능한 시간**: `available_times`는 주최자가 모임 생성 시 선택한 가능한 시간 목록입니다. 프론트엔드에서 날짜-시간 선택 UI로 입력받습니다.
 
 ---
 
