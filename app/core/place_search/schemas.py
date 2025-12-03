@@ -34,41 +34,53 @@ class StationInfo(BaseModel):
 
 class FoodType(str, Enum):
     """음식 종류"""
-    KOREAN = "korean"           # 한식
-    JAPANESE = "japanese"       # 일식
-    CHINESE = "chinese"         # 중식
-    WESTERN = "western"         # 양식
-    ASIAN = "asian"             # 아시안
-    MEAT = "meat"               # 고기/구이
-    SEAFOOD = "seafood"         # 해산물
-    CHICKEN = "chicken"         # 치킨
-    PIZZA = "pizza"             # 피자
-    CAFE = "cafe"               # 카페/디저트
-    BAR = "bar"                 # 술집/바
-    ETC = "etc"                 # 기타
+    KOREAN = "한식"
+    JAPANESE = "일식"
+    CHINESE = "중식"
+    WESTERN = "양식"
+    ASIAN = "아시안"
+    SNACK = "분식"
+    MEAT = "고기"
+    SEAFOOD = "해산물"
+    CHICKEN = "치킨"
+    PIZZA = "피자"
+    BURGER = "햄버거"
+    CAFE = "카페"
+    DESSERT = "디저트"
+    BAR = "술집"
+    ETC = "기타"
 
 
 class AtmosphereType(str, Enum):
     """분위기"""
-    QUIET = "quiet"                     # 조용한
-    LIVELY = "lively"                   # 활기찬
-    ROMANTIC = "romantic"               # 로맨틱한
-    MODERN = "modern"                   # 모던한
-    TRADITIONAL = "traditional"         # 전통적인
-    COZY = "cozy"                       # 아늑한
-    SPACIOUS = "spacious"               # 넓은
-    PRIVATE = "private"                 # 프라이빗
+    QUIET = "조용한"
+    LIVELY = "활기찬"
+    ROMANTIC = "로맨틱한"
+    MODERN = "모던한"
+    TRADITIONAL = "전통적인"
+    COZY = "아늑한"
+    SPACIOUS = "넓은"
+    PRIVATE = "프라이빗한"
+    CASUAL = "캐주얼한"
+    FORMAL = "격식있는"
+    CONVERSATION_FRIENDLY = "대화 나누기 좋은"
+    COMFORTABLE = "편안한"
+    TRENDY = "트렌디한"
+    NICE_ATMOSPHERE = "분위기 좋은"
 
 
 class ConditionType(str, Enum):
     """조건"""
-    PARKING = "parking"                 # 주차 가능
-    PRIVATE_ROOM = "private_room"       # 룸/개인실
-    GROUP_FRIENDLY = "group_friendly"   # 단체 가능
-    PET_FRIENDLY = "pet_friendly"       # 반려동물 동반
-    WHEELCHAIR = "wheelchair"           # 휠체어 이용
-    RESERVATION = "reservation"         # 예약 가능
-    LATE_NIGHT = "late_night"           # 심야 영업
+    PARKING = "주차"
+    PRIVATE_ROOM = "개별룸"
+    GROUP_SEATING = "단체석"
+    PET_FRIENDLY = "반려동물"
+    WHEELCHAIR = "휠체어"
+    RESERVATION = "예약가능"
+    LATE_NIGHT = "24시간"
+    OUTDOOR_SEATING = "야외석"
+    DELIVERY = "배달"
+    TAKEOUT = "포장"
 
 
 # ============================================================

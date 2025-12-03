@@ -30,11 +30,14 @@ class KeywordGenerator:
         FoodType.CHINESE: "중식",
         FoodType.WESTERN: "양식",
         FoodType.ASIAN: "아시안",
+        FoodType.SNACK: "분식",
         FoodType.MEAT: "고기",
         FoodType.SEAFOOD: "해산물",
         FoodType.CHICKEN: "치킨",
         FoodType.PIZZA: "피자",
+        FoodType.BURGER: "햄버거",
         FoodType.CAFE: "카페",
+        FoodType.DESSERT: "디저트",
         FoodType.BAR: "술집",
         FoodType.ETC: "맛집",
     }
@@ -50,6 +53,12 @@ class KeywordGenerator:
         AtmosphereType.COZY: "분위기 좋은",  # 아늑한 → 분위기 좋은
         AtmosphereType.SPACIOUS: "넓은",
         AtmosphereType.PRIVATE: "프라이빗",  # (101개)
+        AtmosphereType.CASUAL: "캐주얼",
+        AtmosphereType.FORMAL: "격식",
+        AtmosphereType.CONVERSATION_FRIENDLY: "회식",  # 대화 나누기 좋은 → 회식
+        AtmosphereType.COMFORTABLE: "편안한",
+        AtmosphereType.TRENDY: "인스타",
+        AtmosphereType.NICE_ATMOSPHERE: "분위기 좋은",
     }
     
     # 분위기별 검색 가능한 키워드 조합
@@ -62,16 +71,25 @@ class KeywordGenerator:
         AtmosphereType.COZY: ["분위기 좋은", "아늑한"],
         AtmosphereType.SPACIOUS: ["넓은", "단체"],
         AtmosphereType.PRIVATE: ["프라이빗", "룸"],
+        AtmosphereType.CASUAL: ["캐주얼", "편안한"],
+        AtmosphereType.FORMAL: ["격식", "고급"],
+        AtmosphereType.CONVERSATION_FRIENDLY: ["회식", "조용한"],
+        AtmosphereType.COMFORTABLE: ["편안한", "분위기 좋은"],
+        AtmosphereType.TRENDY: ["인스타", "분위기 좋은"],
+        AtmosphereType.NICE_ATMOSPHERE: ["분위기 좋은", "인스타"],
     }
     
     CONDITION_KR: dict[ConditionType, str] = {
         ConditionType.PARKING: "주차가능",
         ConditionType.PRIVATE_ROOM: "룸",
-        ConditionType.GROUP_FRIENDLY: "단체",
+        ConditionType.GROUP_SEATING: "단체",
         ConditionType.PET_FRIENDLY: "애견동반",
         ConditionType.WHEELCHAIR: "휠체어",
         ConditionType.RESERVATION: "예약",
         ConditionType.LATE_NIGHT: "심야영업",
+        ConditionType.OUTDOOR_SEATING: "야외석",
+        ConditionType.DELIVERY: "배달가능",
+        ConditionType.TAKEOUT: "포장가능",
     }
     
     PURPOSE_KR: dict[str, list[str]] = {
