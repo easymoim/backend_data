@@ -31,13 +31,6 @@ class PlaceUpdate(BaseModel):
 class PlaceResponse(PlaceBase):
     """장소 응답 스키마"""
     id: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    phone: Optional[str] = None
-    place_url: Optional[str] = None
-    rating: Optional[float] = None
-    thumbnail: Optional[str] = None
-    created_at: datetime
     updated_at: datetime
 
     class Config:
