@@ -8,6 +8,15 @@ import enum
 from app.database import Base
 
 
+class MeetingPurpose(str, enum.Enum):
+    """모임 목적"""
+    DINING = "dining"        # 식사
+    CAFE = "cafe"           # 카페
+    DRINK = "drink"         # 술/음료
+    ACTIVITY = "activity"   # 활동
+    ETC = "etc"            # 기타
+
+
 class LocationChoiceType(str, enum.Enum):
     """장소 선택 방식"""
     CENTER_LOCATION = "center_location"       # 중간위치 찾기
