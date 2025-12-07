@@ -120,25 +120,25 @@ backend_data/
 - `GET /api/v1/users/{user_id}` - 사용자 조회
 - `PUT /api/v1/users/{user_id}` - 사용자 정보 업데이트
 
-#### 약속 (Meeting)
-- `POST /api/v1/meetings?creator_id={user_id}` - 약속 생성
-- `GET /api/v1/meetings` - 약속 목록 조회
-- `GET /api/v1/meetings/share-code/{share_code}` - 공유 코드로 약속 조회
-- `GET /api/v1/meetings/{meeting_id}` - 약속 조회
-- `PUT /api/v1/meetings/{meeting_id}` - 약속 정보 업데이트
-- `DELETE /api/v1/meetings/{meeting_id}` - 약속 삭제
+#### 모임 (Meeting)
+- `POST /api/v1/meetings?creator_id={user_id}` - 모임 생성
+- `GET /api/v1/meetings` - 모임 목록 조회
+- `GET /api/v1/meetings/share-code/{share_code}` - 공유 코드로 모임 조회
+- `GET /api/v1/meetings/{meeting_id}` - 모임 조회
+- `PUT /api/v1/meetings/{meeting_id}` - 모임 정보 업데이트
+- `DELETE /api/v1/meetings/{meeting_id}` - 모임 삭제
 
 #### 참가자 (Participant)
 - `POST /api/v1/participants` - 참가자 추가
-- `GET /api/v1/participants/meeting/{meeting_id}` - 약속별 참가자 목록
-- `GET /api/v1/participants/user/{user_id}` - 사용자별 참가한 약속 목록
+- `GET /api/v1/participants/meeting/{meeting_id}` - 모임별 참가자 목록
+- `GET /api/v1/participants/user/{user_id}` - 사용자별 참가한 모임 목록
 - `GET /api/v1/participants/{participant_id}` - 참가자 조회
 - `PUT /api/v1/participants/{participant_id}` - 참가자 정보 업데이트
 - `DELETE /api/v1/participants/{participant_id}` - 참가자 삭제
 
 #### 시간 후보 (Time Candidate)
 - `POST /api/v1/time-candidates` - 시간 후보 추가
-- `GET /api/v1/time-candidates/meeting/{meeting_id}` - 약속별 시간 후보 목록
+- `GET /api/v1/time-candidates/meeting/{meeting_id}` - 모임별 시간 후보 목록
 - `GET /api/v1/time-candidates/{candidate_id}` - 시간 후보 조회
 - `DELETE /api/v1/time-candidates/{candidate_id}` - 시간 후보 삭제
 
@@ -159,7 +159,7 @@ backend_data/
 
 #### 장소 후보 (Place Candidate)
 - `POST /api/v1/place-candidates` - 장소 후보 추가
-- `GET /api/v1/place-candidates/meeting/{meeting_id}` - 약속별 장소 후보 목록
+- `GET /api/v1/place-candidates/meeting/{meeting_id}` - 모임별 장소 후보 목록
 - `GET /api/v1/place-candidates/{candidate_id}` - 장소 후보 조회
 - `PUT /api/v1/place-candidates/{candidate_id}` - 장소 후보 정보 업데이트
 - `DELETE /api/v1/place-candidates/{candidate_id}` - 장소 후보 삭제
@@ -167,7 +167,7 @@ backend_data/
 #### 장소 투표 (Place Vote)
 - `POST /api/v1/place-votes` - 장소 투표 (생성/업데이트)
 - `GET /api/v1/place-votes/participant/{participant_id}` - 참가자별 투표 목록
-- `GET /api/v1/place-votes/meeting/{meeting_id}` - 약속별 투표 목록
+- `GET /api/v1/place-votes/meeting/{meeting_id}` - 모임별 투표 목록
 - `GET /api/v1/place-votes/{vote_id}` - 투표 조회
 - `PUT /api/v1/place-votes/{vote_id}` - 투표 업데이트
 - `DELETE /api/v1/place-votes/{vote_id}` - 투표 삭제
@@ -201,3 +201,31 @@ backend_data/
 ```bash
 uv run python test_kakao_login.py YOUR_ACCESS_TOKEN
 ```
+
+## API 테스트
+
+API를 테스트하는 다양한 방법이 준비되어 있습니다.
+
+📖 **[API_TEST_GUIDE.md](./docs/API_TEST_GUIDE.md)** - API 테스트 가이드
+
+### 빠른 시작
+
+1. **서버 실행**
+   ```bash
+   .venv/bin/python main.py
+   # 또는
+   uv run python main.py
+   ```
+
+2. **Swagger UI 접속** (가장 쉬운 방법)
+   - 브라우저에서 http://localhost:8000/docs 접속
+   - 각 API를 클릭하여 직접 테스트 가능
+
+3. **curl로 테스트**
+   ```bash
+   # 헬스 체크
+   curl http://localhost:8000/health
+   
+   # 모임 목록 조회
+   curl http://localhost:8000/api/v1/meetings
+   ```

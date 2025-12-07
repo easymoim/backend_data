@@ -11,7 +11,7 @@ def get_time_candidate(db: Session, candidate_id: UUID) -> Optional[MeetingTimeC
 
 
 def get_time_candidates_by_meeting(db: Session, meeting_id: UUID) -> List[MeetingTimeCandidate]:
-    """약속별 시간 후보 목록 조회"""
+    """모임별 시간 후보 목록 조회"""
     return db.query(MeetingTimeCandidate).filter(
         MeetingTimeCandidate.meeting_id == meeting_id
     ).order_by(MeetingTimeCandidate.candidate_time).all()

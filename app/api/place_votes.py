@@ -30,14 +30,14 @@ def create_place_vote(vote: PlaceVoteCreate, db: Session = Depends(get_db)):
             detail="시간 후보를 찾을 수 없습니다."
         )
     
-    # 약속 ID 일치 확인
+    # 모임 ID 일치 확인
     if (
         db_participant.meeting_id != vote.meeting_id
         or db_candidate.meeting_id != vote.meeting_id
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="참가자, 시간 후보, 약속 ID가 일치하지 않습니다."
+            detail="참가자, 시간 후보, 모임 ID가 일치하지 않습니다."
         )
     
     return crud.place_vote.create_place_vote(db=db, vote=vote)
@@ -52,7 +52,7 @@ def read_place_votes_by_participant(participant_id: UUID, db: Session = Depends(
 
 @router.get("/meeting/{meeting_id}", response_model=List[PlaceVoteResponse])
 def read_place_votes_by_meeting(meeting_id: UUID, db: Session = Depends(get_db)):
-    """약속별 장소 투표 목록 조회"""
+    """모임별 장소 투표 목록 조회"""
     votes = crud.place_vote.get_place_votes_by_meeting(db, meeting_id=meeting_id)
     return votes
 

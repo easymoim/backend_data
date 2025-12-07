@@ -12,12 +12,12 @@ router = APIRouter()
 @router.post("/", response_model=ParticipantResponse, status_code=status.HTTP_201_CREATED)
 def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
     """새 참가자 생성"""
-    # 약속 존재 확인
+    # 모임 존재 확인
     db_meeting = crud.meeting.get_meeting(db, meeting_id=participant.meeting_id)
     if not db_meeting:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="약속을 찾을 수 없습니다."
+            detail="모임을 찾을 수 없습니다."
         )
     
     # 사용자 존재 확인 (user_id가 있는 경우)
@@ -34,14 +34,14 @@ def create_participant(participant: ParticipantCreate, db: Session = Depends(get
 
 @router.get("/meeting/{meeting_id}", response_model=List[ParticipantResponse])
 def read_participants_by_meeting(meeting_id: UUID, db: Session = Depends(get_db)):
-    """약속별 참가자 목록 조회"""
+    """모임별 참가자 목록 조회"""
     participants = crud.participant.get_participants_by_meeting(db, meeting_id=meeting_id)
     return participants
 
 
 @router.get("/user/{user_id}", response_model=List[ParticipantResponse])
 def read_participants_by_user(user_id: int, db: Session = Depends(get_db)):
-    """사용자별 참가한 약속 목록 조회"""
+    """사용자별 참가한 모임 목록 조회"""
     participants = crud.participant.get_participants_by_user(db, user_id=user_id)
     return participants
 

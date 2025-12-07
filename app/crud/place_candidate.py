@@ -11,7 +11,7 @@ def get_place_candidate(db: Session, candidate_id: str) -> Optional[PlaceCandida
 
 
 def get_place_candidates_by_meeting(db: Session, meeting_id: UUID) -> List[PlaceCandidate]:
-    """약속별 장소 후보 목록 조회"""
+    """모임별 장소 후보 목록 조회"""
     return db.query(PlaceCandidate).filter(PlaceCandidate.meeting_id == meeting_id).all()
 
 

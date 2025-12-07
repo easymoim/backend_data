@@ -117,13 +117,13 @@
 
 ---
 
-## 약속 (Meetings)
+## 모임 (Meetings)
 
-### 약속 생성
+### 모임 생성
 
 **POST** `/meetings?creator_id={user_id}`
 
-새로운 약속을 생성합니다.
+새로운 모임을 생성합니다.
 
 **Query Parameters:**
 - `creator_id` (required): 주최자 사용자 ID
@@ -142,12 +142,27 @@
     "condition": ["주차"]
   },
   "deadline": "2025-11-27T23:59:00",
-  "expected_participant_count": 5
-  // share_code는 선택사항이며, 없으면 null로 저장됩니다
+  "expected_participant_count": 5,
+  "share_code": "ABC123",
+  "status": "time_voting",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00",
+    "2025-11-10T20:00:00",
+    "2025-11-11T08:00:00",
+    "2025-11-11T13:00:00"
+  ]
 }
 ```
 
-**참고:** `share_code`는 선택사항입니다. 요청에 포함하지 않으면 `null`로 저장됩니다.
+**필드 설명:**
+- `share_code`: 선택사항, 없으면 `null`로 저장됩니다
+- `status`: 모임 상태 (선택사항)
+  - `"time_voting"`: 시간 투표 중
+  - `"place_voting"`: 장소 투표 중
+  - `"confirmed"`: 모임 확정
+- `available_times`: 주최자가 선택한 가능한 시간 목록 (배열, 선택사항)
+
 
 **Response (201 Created):**
 ```json
@@ -167,6 +182,14 @@
   "deadline": "2025-11-27T23:59:00",
   "expected_participant_count": 5,
   "share_code": "ABC123",
+  "status": "time_voting",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00",
+    "2025-11-10T20:00:00",
+    "2025-11-11T08:00:00",
+    "2025-11-11T13:00:00"
+  ],
   "confirmed_time": null,
   "confirmed_location": null,
   "confirmed_at": null,
@@ -175,11 +198,11 @@
 }
 ```
 
-### 약속 목록 조회
+### 모임 목록 조회
 
 **GET** `/meetings?skip=0&limit=100`
 
-모든 약속 목록을 조회합니다.
+모든 모임 목록을 조회합니다.
 
 **Query Parameters:**
 - `skip` (optional, default: 0): 건너뛸 개수
@@ -197,49 +220,64 @@
 ]
 ```
 
-### 생성자별 약속 목록 조회
+### 생성자별 모임 목록 조회
 
 **GET** `/meetings/creator/{creator_id}?skip=0&limit=100`
 
-특정 사용자가 생성한 약속 목록을 조회합니다.
+특정 사용자가 생성한 모임 목록을 조회합니다.
 
-### 공유 코드로 약속 조회
+### 공유 코드로 모임 조회
 
 **GET** `/meetings/share-code/{share_code}`
 
-공유 코드를 사용하여 약속을 조회합니다. (비로그인 사용자가 약속에 참가할 때 사용)
+공유 코드를 사용하여 모임을 조회합니다. (비로그인 사용자가 모임에 참가할 때 사용)
 
 **예시:**
 ```
 GET /meetings/share-code/ABC123
 ```
 
-### 약속 조회
+### 모임 조회
 
 **GET** `/meetings/{meeting_id}`
 
-특정 약속의 상세 정보를 조회합니다.
+특정 모임의 상세 정보를 조회합니다.
 
-### 약속 정보 업데이트
+### 모임 정보 업데이트
 
 **PUT** `/meetings/{meeting_id}`
 
-약속 정보를 업데이트합니다. (확정 시간, 확정 장소 등)
+모임 정보를 업데이트합니다. (확정 시간, 확정 장소 등)
 
 **Request Body:**
 ```json
 {
+  "name": "이지모임 (수정)",
+  "purpose": ["dining"],
+  "status": "confirmed",
+  "available_times": [
+    "2025-11-10T09:00:00",
+    "2025-11-10T10:00:00"
+  ],
   "confirmed_time": "2025-11-27T18:00:00",
   "confirmed_location": "강남역 맛집",
   "confirmed_at": "2025-11-20T12:00:00"
 }
 ```
 
-### 약속 삭제
+**필드 설명:**
+- 모든 필드는 선택사항입니다. 업데이트할 필드만 포함하면 됩니다.
+- `status`: 모임 상태 업데이트
+  - `"time_voting"`: 시간 투표 중
+  - `"place_voting"`: 장소 투표 중
+  - `"confirmed"`: 모임 확정
+- `available_times`: 주최자가 선택한 가능한 시간 목록 업데이트
+
+### 모임 삭제
 
 **DELETE** `/meetings/{meeting_id}`
 
-약속을 삭제합니다. (관련된 모든 데이터도 함께 삭제됩니다)
+모임을 삭제합니다. (관련된 모든 데이터도 함께 삭제됩니다)
 
 ---
 
@@ -249,7 +287,7 @@ GET /meetings/share-code/ABC123
 
 **POST** `/participants`
 
-약속에 참가자를 추가합니다. (로그인/비로그인 모두 가능)
+모임에 참가자를 추가합니다. (로그인/비로그인 모두 가능)
 
 **Request Body:**
 ```json
@@ -289,11 +327,11 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-### 약속별 참가자 목록 조회
+### 모임별 참가자 목록 조회
 
 **GET** `/participants/meeting/{meeting_id}`
 
-특정 약속의 참가자 목록을 조회합니다.
+특정 모임의 참가자 목록을 조회합니다.
 
 **Response (200 OK):**
 ```json
@@ -308,11 +346,11 @@ GET /meetings/share-code/ABC123
 ]
 ```
 
-### 사용자별 참가한 약속 목록 조회
+### 사용자별 참가한 모임 목록 조회
 
 **GET** `/participants/user/{user_id}`
 
-특정 사용자가 참가한 모든 약속 목록을 조회합니다.
+특정 사용자가 참가한 모든 모임 목록을 조회합니다.
 
 ### 참가자 조회
 
@@ -341,7 +379,7 @@ GET /meetings/share-code/ABC123
 
 **DELETE** `/participants/{participant_id}`
 
-참가자를 약속에서 제거합니다.
+참가자를 모임에서 제거합니다.
 
 ---
 
@@ -351,19 +389,25 @@ GET /meetings/share-code/ABC123
 
 **POST** `/time-candidates`
 
-약속의 시간 후보를 생성합니다. `candidate_time`은 여러 시간과 각 시간의 투표 수를 JSON으로 저장합니다.
+모임의 시간 후보를 생성합니다. `candidate_time`은 여러 시간과 각 시간의 투표 수를 JSON으로 저장합니다.
 
 **Request Body:**
 ```json
 {
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "candidate_time": {
-    "25.11.11.09:00": 0,
-    "25.11.11.14:00": 0,
-    "25.11.12.18:00": 0
+    "2025-11-01 02:00": 0,
+    "2025-11-01 03:00": 0,
+    "2025-11-01 09:00": 0
   }
 }
 ```
+
+**필드 설명:**
+- `candidate_time`: 시간별 투표 수를 저장하는 JSON 객체
+  - 키: 시간 문자열 (예: `"2025-11-01 02:00"`)
+  - 값: 해당 시간에 투표한 참가자 수 (초기값: 0)
+  - 투표 생성/수정/삭제 시 자동으로 업데이트됩니다
 
 **Response (201 Created):**
 ```json
@@ -371,19 +415,19 @@ GET /meetings/share-code/ABC123
   "id": "770e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "candidate_time": {
-    "25.11.11.09:00": 0,
-    "25.11.11.14:00": 0,
-    "25.11.12.18:00": 0
+    "2025-11-01 02:00": 0,
+    "2025-11-01 03:00": 0,
+    "2025-11-01 09:00": 0
   },
   "created_at": "2025-01-01T00:00:00"
 }
 ```
 
-### 약속별 시간 후보 목록 조회
+### 모임별 시간 후보 목록 조회
 
 **GET** `/time-candidates/meeting/{meeting_id}`
 
-특정 약속의 시간 후보 목록을 조회합니다.
+특정 모임의 시간 후보 목록을 조회합니다.
 
 ### 시간 후보 조회
 
@@ -413,10 +457,21 @@ GET /meetings/share-code/ABC123
   "participant_id": "660e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "time_candidate_id": "770e8400-e29b-41d4-a716-446655440000",
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00",
+    "2025-11-01 09:00"
+  ],
   "is_available": true,
   "memo": "늦을 수도 있어요"
 }
 ```
+
+**필드 설명:**
+- `time_list`: 투표한 시간 목록 (배열, 필수)
+  - `meeting_time_candidate`의 `candidate_time` JSON에 포함된 시간 문자열 목록
+  - 예: `["2025-11-01 02:00", "2025-11-01 03:00"]`
+- `is_available`: 해당 시간들에 대한 가능 여부 (true: 가능, false: 불가능)
 
 **Response (201 Created):**
 ```json
@@ -425,6 +480,11 @@ GET /meetings/share-code/ABC123
   "participant_id": "660e8400-e29b-41d4-a716-446655440000",
   "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
   "time_candidate_id": "770e8400-e29b-41d4-a716-446655440000",
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00",
+    "2025-11-01 09:00"
+  ],
   "is_available": true,
   "memo": "늦을 수도 있어요",
   "created_at": "2025-01-01T00:00:00",
@@ -432,7 +492,9 @@ GET /meetings/share-code/ABC123
 }
 ```
 
-**참고:** 투표가 생성/업데이트되면 `meeting_time_candidate` 테이블의 `candidate_time` JSON이 자동으로 업데이트되어야 합니다. (현재는 수동 업데이트 필요)
+**참고:** 
+- 투표가 생성/업데이트/삭제되면 `meeting_time_candidate` 테이블의 `candidate_time` JSON이 **자동으로 업데이트**됩니다.
+- 각 시간별로 `is_available=true`이고 `time_list`에 포함된 투표 수가 집계되어 `candidate_time`에 반영됩니다.
 
 ### 참가자별 시간 투표 목록 조회
 
@@ -461,10 +523,18 @@ GET /meetings/share-code/ABC123
 **Request Body:**
 ```json
 {
+  "time_list": [
+    "2025-11-01 02:00",
+    "2025-11-01 03:00"
+  ],
   "is_available": false,
   "memo": "불가능합니다"
 }
 ```
+
+**필드 설명:**
+- 모든 필드는 선택사항입니다. 업데이트할 필드만 포함하면 됩니다.
+- `time_list`: 투표한 시간 목록 업데이트
 
 ### 시간 투표 삭제
 
@@ -571,11 +641,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 }
 ```
 
-### 약속별 장소 후보 목록 조회
+### 모임별 장소 후보 목록 조회
 
 **GET** `/place-candidates/meeting/{meeting_id}`
 
-특정 약속의 장소 후보 목록을 조회합니다.
+특정 모임의 장소 후보 목록을 조회합니다.
 
 ### 장소 후보 조회
 
@@ -638,11 +708,11 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 특정 참가자가 투표한 모든 장소 투표 목록을 조회합니다.
 
-### 약속별 장소 투표 목록 조회
+### 모임별 장소 투표 목록 조회
 
 **GET** `/place-votes/meeting/{meeting_id}`
 
-특정 약속의 모든 장소 투표 목록을 조회합니다.
+특정 모임의 모든 장소 투표 목록을 조회합니다.
 
 ### 장소 투표 조회
 
@@ -671,7 +741,7 @@ LLM이 추천한 장소 후보를 생성합니다.
 **404 Not Found:**
 ```json
 {
-  "detail": "약속을 찾을 수 없습니다."
+  "detail": "모임을 찾을 수 없습니다."
 }
 ```
 
@@ -693,27 +763,35 @@ LLM이 추천한 장소 후보를 생성합니다.
 
 ## 일반적인 사용 흐름
 
-### 1. 약속 생성 및 참가
+### 1. 모임 생성 및 참가
 
 1. 사용자 로그인: `POST /auth/kakao/login`
-2. 약속 생성: `POST /meetings?creator_id={user_id}`
-3. 참가자 추가: `POST /participants` (공유 코드로 약속 조회 후)
+2. 모임 생성: `POST /meetings?creator_id={user_id}`
+   - `available_times`: 주최자가 선택한 가능한 시간 목록 포함
+   - `status`: 초기 상태 설정 (예: `"time_voting"`)
+3. 참가자 추가: `POST /participants` (공유 코드로 모임 조회 후)
 
 ### 2. 시간 투표
 
 1. 시간 후보 생성: `POST /time-candidates`
+   - `candidate_time`에 `meeting.available_times`의 시간들을 키로 포함
 2. 참가자들이 시간 투표: `POST /time-votes`
+   - `time_list`: 투표할 시간 목록 (배열)
+   - `is_available`: 가능 여부
+   - 투표 수가 자동으로 `candidate_time`에 반영됨
 3. 시간 후보별 투표 조회: `GET /time-votes/candidate/{candidate_id}`
+4. 모임 상태 업데이트: `PUT /meetings/{meeting_id}` - `status: "place_voting"`으로 변경
 
 ### 3. 장소 투표
 
 1. 장소 후보 생성: `POST /place-candidates` (LLM 추천 후)
 2. 참가자들이 장소 투표: `POST /place-votes`
-3. 약속별 장소 투표 조회: `GET /place-votes/meeting/{meeting_id}`
+3. 모임별 장소 투표 조회: `GET /place-votes/meeting/{meeting_id}`
 
-### 4. 약속 확정
+### 4. 모임 확정
 
-1. 약속 정보 업데이트: `PUT /meetings/{meeting_id}`
+1. 모임 정보 업데이트: `PUT /meetings/{meeting_id}`
+   - `status: "confirmed"` 설정
    - `confirmed_time`, `confirmed_location`, `confirmed_at` 설정
 
 ---
@@ -721,9 +799,294 @@ LLM이 추천한 장소 후보를 생성합니다.
 ## 주의사항
 
 1. **UUID 형식**: `meeting_id`, `participant_id`, `candidate_id` 등은 UUID 형식입니다.
-2. **공유 코드**: 비로그인 사용자도 공유 코드로 약속에 참가할 수 있습니다.
+2. **공유 코드**: 비로그인 사용자도 공유 코드로 모임에 참가할 수 있습니다.
 3. **투표 중복 방지**: `time_vote`와 `place_vote`는 `participant_id`와 `candidate_id` 조합이 유일해야 합니다.
-4. **자동 업데이트**: 투표 생성/업데이트 시 `meeting_time_candidate`의 `candidate_time` JSON이 자동으로 업데이트되어야 합니다. (현재는 수동 업데이트 필요)
+4. **자동 업데이트**: 시간 투표 생성/업데이트/삭제 시 `meeting_time_candidate`의 `candidate_time` JSON이 **자동으로 업데이트**됩니다.
+5. **모임 상태**: `status` 필드는 모임의 현재 단계를 나타냅니다.
+   - `"time_voting"`: 시간 투표 중
+   - `"place_voting"`: 장소 투표 중  
+   - `"confirmed"`: 모임 확정
+6. **가능한 시간**: `available_times`는 주최자가 모임 생성 시 선택한 가능한 시간 목록입니다. 프론트엔드에서 날짜-시간 선택 UI로 입력받습니다.
+
+---
+
+## 리뷰 (Reviews)
+
+모임 완료 후 참가자들이 작성하는 리뷰를 관리하는 API입니다.
+
+### 리뷰 생성
+
+**POST** `/reviews`
+
+새 리뷰를 생성합니다.
+
+**Request Body:**
+```json
+{
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 0
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 0,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": {
+    "id": 1,
+    "name": "홍길동",
+    "email": "user@example.com",
+    "oauth_provider": "kakao",
+    "oauth_id": "123456789",
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00",
+    "updated_at": "2025-01-01T00:00:00"
+  }
+}
+```
+
+### 모든 리뷰 목록 조회
+
+**GET** `/reviews?skip=0&limit=100`
+
+모든 리뷰 목록을 조회합니다.
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 리뷰 조회
+
+**GET** `/reviews/{review_id}`
+
+특정 리뷰를 조회합니다.
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 모임별 리뷰 목록 조회
+
+**GET** `/reviews/meeting/{meeting_id}?skip=0&limit=100`
+
+특정 모임의 모든 리뷰를 조회합니다.
+
+**Path Parameters:**
+- `meeting_id` (UUID): 모임 ID
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 사용자별 리뷰 목록 조회
+
+**GET** `/reviews/user/{user_id}?skip=0&limit=100`
+
+특정 사용자가 작성한 모든 리뷰를 조회합니다.
+
+**Path Parameters:**
+- `user_id` (int): 사용자 ID
+
+**Query Parameters:**
+- `skip` (int, 기본값: 0): 건너뛸 레코드 수
+- `limit` (int, 기본값: 100): 반환할 최대 레코드 수
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": "660e8400-e29b-41d4-a716-446655440000",
+    "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": 1,
+    "rating": 5,
+    "image_list": ["https://example.com/image1.jpg"],
+    "text": "정말 즐거운 모임이었습니다!",
+    "like_count": 10,
+    "created_at": "2025-01-15T10:00:00",
+    "updated_at": "2025-01-15T10:00:00",
+    "deleted_at": null,
+    "user": { ... }
+  }
+]
+```
+
+### 리뷰 정보 업데이트
+
+**PUT** `/reviews/{review_id}`
+
+리뷰 정보를 업데이트합니다.
+
+**Request Body:**
+```json
+{
+  "rating": 4,
+  "text": "수정된 리뷰 내용입니다.",
+  "image_list": [
+    "https://example.com/new-image.jpg"
+  ]
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 4,
+  "image_list": ["https://example.com/new-image.jpg"],
+  "text": "수정된 리뷰 내용입니다.",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T11:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 삭제
+
+**DELETE** `/reviews/{review_id}`
+
+리뷰를 소프트 삭제합니다. (`deleted_at` 필드에 현재 시간이 설정됩니다)
+
+**Response (204 No Content):**
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 좋아요
+
+**POST** `/reviews/{review_id}/like`
+
+리뷰에 좋아요를 추가합니다. (`like_count`가 1 증가합니다)
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 11,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+### 리뷰 좋아요 취소
+
+**DELETE** `/reviews/{review_id}/like`
+
+리뷰의 좋아요를 취소합니다. (`like_count`가 1 감소합니다, 최소 0)
+
+**Response (200 OK):**
+```json
+{
+  "id": "660e8400-e29b-41d4-a716-446655440000",
+  "meeting_id": "550e8400-e29b-41d4-a716-446655440000",
+  "user_id": 1,
+  "rating": 5,
+  "image_list": ["https://example.com/image1.jpg"],
+  "text": "정말 즐거운 모임이었습니다!",
+  "like_count": 10,
+  "created_at": "2025-01-15T10:00:00",
+  "updated_at": "2025-01-15T10:00:00",
+  "deleted_at": null,
+  "user": { ... }
+}
+```
+
+**에러 응답:**
+- `404 Not Found`: 리뷰를 찾을 수 없습니다
+
+**참고사항:**
+- `rating`: 평가 점수는 1-5 사이의 정수입니다.
+- `image_list`: 이미지 URL 리스트입니다. Supabase Storage를 사용할 수 있습니다.
+- `deleted_at`: 소프트 삭제된 리뷰는 조회되지 않습니다 (`deleted_at IS NULL`인 리뷰만 조회됩니다).
 
 ---
 

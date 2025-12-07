@@ -8,7 +8,7 @@ from app.database import Base
 
 
 class MeetingTimeCandidate(Base):
-    """약속 시간 후보 모델"""
+    """모임 시간 후보 모델"""
     __tablename__ = "meeting_time_candidate"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)

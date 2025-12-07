@@ -34,7 +34,7 @@ CREATE TABLE user (
 ## meeting
 
 **테이블 설명:**
-- 모임(약속)의 전체 정보를 저장하는 핵심 테이블입니다.
+- 모임의 전체 정보를 저장하는 핵심 테이블입니다.
 - 주최자(creator_id)가 모임을 생성하고, 참가자들이 시간과 장소에 투표합니다.
 - `purpose`: 모임 목적을 배열로 저장 (예: ['dining', 'drink'])
 - `location_choice_type`: 위치 선택 방식 (중심 위치, 선호 지역, 선호 지하철역)
@@ -55,11 +55,14 @@ CREATE TABLE user (
 | deadline | timestamp | 2025-11-27 23:59 |  |
 | expected_participant_count | int | 예상 참가 인원 |  |
 | share_code | varchar | 공유 코드 |  |
-| confirmed_time | timestamp | 확정된 약속 시간 |  |
+| status | varchar | 모임 상태 (time_voting, place_voting, confirmed) | time_voting |
+| available_times | timestamp[] | 주최자가 선택한 가능한 시간 목록 | ["2025-11-10 09:00", "2025-11-10 10:00", "2025-11-11 08:00"] |
+| confirmed_time | timestamp | 확정된 모임 시간 |  |
 | confirmed_location | varchar | 확정된 장소 |  |
 | confirmed_at | timestamp | 주최자가 "확정하기!" 누른 시간 |  |
 | created_at | timestamp |  |  |
 | updated_at | timestamp |  |  |
+| deleted_at | timestamp | 소프트 삭제 시간 (null이면 삭제되지 않음) |  |
 
 **SQL:**
 ```sql
@@ -75,11 +78,14 @@ CREATE TABLE meeting (
     deadline TIMESTAMP,
     expected_participant_count INTEGER,
     share_code VARCHAR(255) UNIQUE,
+    status VARCHAR(50),
+    available_times TIMESTAMP[],
     confirmed_time TIMESTAMP,
     confirmed_location VARCHAR(255),
     confirmed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 ```
 
@@ -312,4 +318,43 @@ CREATE TABLE place_candidate (
 **참고:**
 - location : 지역, 정확한 위치 (위도 경도) → ex 강남구, 용산구
 - place : 식당 , 카페 → ex 장터, 벳남미식
-- review 관련 테이블 나중에 해주세요 제발제발제발제발
+
+## review
+
+**테이블 설명:**
+- 모임 완료 후 모임에 대한 리뷰를 저장하는 테이블입니다.
+- 참가자들이 모임 후 경험을 공유하고 평가할 수 있습니다.
+- `rating`: 평가 점수 (1-5)
+- `image_list`: 리뷰에 첨부된 이미지 URL 리스트 (fileserver 필요, Supabase에 있음)
+- `text`: 리뷰 텍스트 내용
+- `like_count`: 리뷰 좋아요 수
+- `deleted_at`: 소프트 삭제 시간 (null이면 삭제되지 않음)
+
+| Column | Type | Note |
+| --- | --- | --- |
+| id | PK | UUID |
+| meeting_id | FK(Meeting.id) |  |
+| user_id | FK(User.id) | 리뷰 작성자 |
+| rating | int | 평가 점수 (1-5) |
+| image_list | text[] | 이미지 URL 리스트 [image1, image2, ...] |
+| text | text | 리뷰 텍스트 |
+| like_count | int | 좋아요 수 |
+| created_at | timestamp |  |
+| updated_at | timestamp |  |
+| deleted_at | timestamp | 소프트 삭제 시간 (null이면 삭제되지 않음) |
+
+**SQL:**
+```sql
+CREATE TABLE review (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meeting_id UUID NOT NULL REFERENCES meeting(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    rating INTEGER,
+    image_list TEXT[],
+    text TEXT,
+    like_count INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+```

@@ -9,6 +9,7 @@ from app.api import (
     places,
     place_candidates,
     place_votes,
+    reviews,
 )
 
 api_router = APIRouter()
@@ -22,4 +23,5 @@ api_router.include_router(time_votes.router, prefix="/time-votes", tags=["time-v
 api_router.include_router(places.router, prefix="/places", tags=["places"])
 api_router.include_router(place_candidates.router, prefix="/place-candidates", tags=["place-candidates"])
 api_router.include_router(place_votes.router, prefix="/place-votes", tags=["place-votes"])
+api_router.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
 
