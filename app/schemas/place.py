@@ -1,10 +1,6 @@
-"""
-장소 스키마 (LLM 추천 중 주최자가 선택한 장소)
-"""
-
 from pydantic import BaseModel
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 
 class PlaceBase(BaseModel):
@@ -12,15 +8,22 @@ class PlaceBase(BaseModel):
     name: str
     category: Optional[str] = None
     address: Optional[str] = None
+    location: Optional[str] = None
+    rating: Optional[float] = None
+    thumbnail: Optional[str] = None
 
 
 class PlaceCreate(PlaceBase):
     """장소 생성 스키마"""
-    id: str  # 카카오 Place ID
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    phone: Optional[str] = None
-    place_url: Optional[str] = None
+    id: str  # API Place ID
+
+
+class PlaceUpdate(BaseModel):
+    """장소 업데이트 스키마"""
+    name: Optional[str] = None
+    category: Optional[str] = None
+    address: Optional[str] = None
+    location: Optional[str] = None
     rating: Optional[float] = None
     thumbnail: Optional[str] = None
 
