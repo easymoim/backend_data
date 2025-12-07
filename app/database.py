@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "allow"  # 환경변수에서 추가 필드 허용
 
 settings = Settings()
 

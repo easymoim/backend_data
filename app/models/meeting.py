@@ -9,13 +9,6 @@ from app.database import Base
 
 
 class LocationChoiceType(str, enum.Enum):
-    """장소 선택 타입"""
-    CENTER_LOCATION = "center_location"
-    PREFERENCE_AREA = "preference_area"
-    PREFERENCE_SUBWAY = "preference_subway"
-
-
-class LocationChoiceType(str, enum.Enum):
     """장소 선택 방식"""
     CENTER_LOCATION = "center_location"       # 중간위치 찾기
     PREFERENCE_AREA = "preference_area"       # 선호 지역 선택
