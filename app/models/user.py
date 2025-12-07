@@ -14,14 +14,14 @@ class OAuthProvider(str, enum.Enum):
 
 class User(Base):
     """사용자 모델"""
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     
     # OAuth 정보
-    oauth_provider = Column(Enum(OAuthProvider), nullable=False)
+    oauth_provider = Column(Enum(OAuthProvider, native_enum=False, length=20), nullable=False)
     oauth_id = Column(String(255), nullable=False, unique=True)
     
     # 메타 정보
