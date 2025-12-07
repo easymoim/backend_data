@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Enum, Integer
+from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Enum, Integer, Index
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSON
 from sqlalchemy.orm import relationship
 import uuid
@@ -47,11 +47,16 @@ class Meeting(Base):
     # 메타 정보
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    deleted_at = Column(DateTime, nullable=True)  # 소프트 삭제 시간
+    deleted_at = Column(DateTime, nullable=True, index=True)  # 소프트 삭제 시간 (인덱스 추가)
 
     # 관계
     creator = relationship("User", back_populates="meetings")
     participants = relationship("Participant", back_populates="meeting", cascade="all, delete-orphan")
     time_candidates = relationship("MeetingTimeCandidate", back_populates="meeting", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="meeting", cascade="all, delete-orphan")
+
+    # 복합 인덱스: deleted_at과 creator_id 함께 사용하는 쿼리 최적화
+    __table_args__ = (
+        Index('idx_meeting_creator_deleted', 'creator_id', 'deleted_at'),
+    )
 

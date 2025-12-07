@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
@@ -6,31 +6,39 @@ from app.schemas.meeting import MeetingCreate, MeetingUpdate
 
 
 def get_meeting(db: Session, meeting_id: UUID) -> Optional[Meeting]:
-    """모임 ID로 조회 (삭제되지 않은 모임만)"""
-    return db.query(Meeting).filter(
+    """모임 ID로 조회 (삭제되지 않은 모임만) - creator eager loading"""
+    return db.query(Meeting).options(
+        joinedload(Meeting.creator)
+    ).filter(
         Meeting.id == meeting_id,
         Meeting.deleted_at.is_(None)
     ).first()
 
 
 def get_meetings_by_creator(db: Session, creator_id: int, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """생성자별 모임 목록 조회 (삭제되지 않은 모임만)"""
-    return db.query(Meeting).filter(
+    """생성자별 모임 목록 조회 (삭제되지 않은 모임만) - creator eager loading"""
+    return db.query(Meeting).options(
+        joinedload(Meeting.creator)
+    ).filter(
         Meeting.creator_id == creator_id,
         Meeting.deleted_at.is_(None)
     ).offset(skip).limit(limit).all()
 
 
 def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeting]:
-    """모든 모임 목록 조회 (삭제되지 않은 모임만)"""
-    return db.query(Meeting).filter(
+    """모든 모임 목록 조회 (삭제되지 않은 모임만) - creator eager loading"""
+    return db.query(Meeting).options(
+        joinedload(Meeting.creator)
+    ).filter(
         Meeting.deleted_at.is_(None)
     ).offset(skip).limit(limit).all()
 
 
 def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
-    """공유 코드로 모임 조회 (삭제되지 않은 모임만)"""
-    return db.query(Meeting).filter(
+    """공유 코드로 모임 조회 (삭제되지 않은 모임만) - creator eager loading"""
+    return db.query(Meeting).options(
+        joinedload(Meeting.creator)
+    ).filter(
         Meeting.share_code == share_code,
         Meeting.deleted_at.is_(None)
     ).first()

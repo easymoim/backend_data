@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from uuid import UUID
 from app.models.review import Review
@@ -6,32 +6,40 @@ from app.schemas.review import ReviewCreate, ReviewUpdate
 
 
 def get_review(db: Session, review_id: UUID) -> Optional[Review]:
-    """리뷰 ID로 조회 (삭제되지 않은 리뷰만)"""
-    return db.query(Review).filter(
+    """리뷰 ID로 조회 (삭제되지 않은 리뷰만) - user eager loading"""
+    return db.query(Review).options(
+        joinedload(Review.user)
+    ).filter(
         Review.id == review_id,
         Review.deleted_at.is_(None)
     ).first()
 
 
 def get_reviews_by_meeting(db: Session, meeting_id: UUID, skip: int = 0, limit: int = 100) -> List[Review]:
-    """모임별 리뷰 목록 조회 (삭제되지 않은 리뷰만)"""
-    return db.query(Review).filter(
+    """모임별 리뷰 목록 조회 (삭제되지 않은 리뷰만) - user eager loading"""
+    return db.query(Review).options(
+        joinedload(Review.user)
+    ).filter(
         Review.meeting_id == meeting_id,
         Review.deleted_at.is_(None)
     ).offset(skip).limit(limit).all()
 
 
 def get_reviews_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[Review]:
-    """사용자별 리뷰 목록 조회 (삭제되지 않은 리뷰만)"""
-    return db.query(Review).filter(
+    """사용자별 리뷰 목록 조회 (삭제되지 않은 리뷰만) - meeting eager loading"""
+    return db.query(Review).options(
+        joinedload(Review.meeting)
+    ).filter(
         Review.user_id == user_id,
         Review.deleted_at.is_(None)
     ).offset(skip).limit(limit).all()
 
 
 def get_all_reviews(db: Session, skip: int = 0, limit: int = 100) -> List[Review]:
-    """모든 리뷰 목록 조회 (삭제되지 않은 리뷰만)"""
-    return db.query(Review).filter(
+    """모든 리뷰 목록 조회 (삭제되지 않은 리뷰만) - user eager loading"""
+    return db.query(Review).options(
+        joinedload(Review.user)
+    ).filter(
         Review.deleted_at.is_(None)
     ).offset(skip).limit(limit).all()
 

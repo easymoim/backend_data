@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from uuid import UUID
 from app.models.participant import Participant
@@ -6,18 +6,25 @@ from app.schemas.participant import ParticipantCreate, ParticipantUpdate
 
 
 def get_participant(db: Session, participant_id: UUID) -> Optional[Participant]:
-    """참가자 ID로 조회"""
-    return db.query(Participant).filter(Participant.id == participant_id).first()
+    """참가자 ID로 조회 - user, meeting eager loading"""
+    return db.query(Participant).options(
+        joinedload(Participant.user),
+        joinedload(Participant.meeting)
+    ).filter(Participant.id == participant_id).first()
 
 
 def get_participants_by_meeting(db: Session, meeting_id: UUID) -> List[Participant]:
-    """모임별 참가자 목록 조회"""
-    return db.query(Participant).filter(Participant.meeting_id == meeting_id).all()
+    """모임별 참가자 목록 조회 - user eager loading"""
+    return db.query(Participant).options(
+        joinedload(Participant.user)
+    ).filter(Participant.meeting_id == meeting_id).all()
 
 
 def get_participants_by_user(db: Session, user_id: int) -> List[Participant]:
-    """사용자별 참가한 모임 목록 조회"""
-    return db.query(Participant).filter(Participant.user_id == user_id).all()
+    """사용자별 참가한 모임 목록 조회 - meeting eager loading"""
+    return db.query(Participant).options(
+        joinedload(Participant.meeting)
+    ).filter(Participant.user_id == user_id).all()
 
 
 def create_participant(db: Session, participant: ParticipantCreate) -> Participant:
