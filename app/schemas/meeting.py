@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
 from typing import Optional, List
@@ -64,15 +64,6 @@ class MeetingResponse(MeetingBase):
     deleted_at: Optional[datetime] = None
     creator: Optional[UserResponse] = None
 
-    @field_serializer('location_choice_type')
-    def serialize_location_choice_type(self, value: Optional[LocationChoiceType], _info) -> Optional[str]:
-        """Enum을 문자열로 변환"""
-        if value is None:
-            return None
-        if isinstance(value, LocationChoiceType):
-            return value.value
-        return str(value) if value else None
-
     class Config:
-        from_attributes = True
-
+        orm_mode = True
+        use_enum_values = True

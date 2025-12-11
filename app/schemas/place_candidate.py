@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from uuid import UUID
 from app.models.place_candidate import LocationType
@@ -34,15 +34,6 @@ class PlaceCandidateResponse(PlaceCandidateBase):
     """장소 후보 응답 스키마"""
     id: str
 
-    @field_serializer('location_type')
-    def serialize_location_type(self, value: Optional[LocationType], _info) -> Optional[str]:
-        """Enum을 문자열로 변환"""
-        if value is None:
-            return None
-        if isinstance(value, LocationType):
-            return value.value
-        return str(value) if value else None
-
     class Config:
-        from_attributes = True
-
+        orm_mode = True
+        use_enum_values = True
