@@ -38,5 +38,5 @@ class ReviewResponse(ReviewBase):
     user: Optional[UserResponse] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 

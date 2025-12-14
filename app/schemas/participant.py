@@ -43,4 +43,5 @@ class ParticipantResponse(ParticipantBase):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
+

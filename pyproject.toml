@@ -2,27 +2,17 @@
 name = "easymoim-backend"
 version = "1.0.0"
 description = "EasyMoim 백엔드 API"
-requires-python = ">=3.10"
+requires-python = "==3.11.*"
 dependencies = [
     "fastapi==0.104.1",
     "uvicorn[standard]==0.24.0",
     "python-dotenv==1.0.0",
-    "pydantic==2.5.0",
-    "pydantic-settings==2.1.0",
+    "pydantic==1.10.18",
     "sqlalchemy==2.0.23",
-    "alembic==1.12.1",
-    "psycopg2-binary==2.9.9",
+    "pg8000==1.30.3",
     "python-multipart==0.0.6",
     "email-validator==2.1.0",
     "httpx==0.25.2",
     "httpx>=0.25.0",  # 카카오 API 비동기 HTTP 클라이언트
     "google-generativeai>=0.3.0"  # Gemini API
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-only-include = ["main.py"]
-
