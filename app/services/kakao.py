@@ -59,14 +59,14 @@ class KakaoService:
         # Kakao ID
         kakao_id = str(kakao_data.get("id", ""))
         
-        # 이름 (닉네임 또는 이름)
-        name = profile.get("nickname") or kakao_account.get("name") or None
+        # 이름 (닉네임 또는 이름, 없으면 "사용자{kakao_id}" 형식)
+        name = profile.get("nickname") or kakao_account.get("name") or f"사용자{kakao_id}"
         
-        # 이메일 (이메일 동의가 필요한 경우)
-        email = kakao_account.get("email", None)
+        # 이메일 (이메일 동의가 필요한 경우, 없으면 None)
+        email = kakao_account.get("email") or None
         
         return {
-            "oauth_provider": OAuthProvider.KAKAO,
+            "oauth_provider": OAuthProvider.KAKAO.value,  # Enum을 문자열로 변환
             "oauth_id": kakao_id,
             "name": name,
             "email": email,

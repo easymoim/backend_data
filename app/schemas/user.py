@@ -8,7 +8,7 @@ from app.models.user import OAuthProvider
 class UserBase(BaseModel):
     """사용자 기본 스키마"""
     name: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
 
 
 class UserCreate(UserBase):
