@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Enum, Integer
+from sqlalchemy import Column, String, DateTime, Boolean, Integer
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -18,10 +19,14 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
     
     # OAuth 정보
-    oauth_provider = Column(String(50), nullable=False)  # google, kakao (Enum을 문자열로 저장)
+    # PostgreSQL ENUM 타입 사용
+    oauth_provider = Column(
+        ENUM(OAuthProvider, name='oauth_provider_enum', create_type=False, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
     oauth_id = Column(String(255), nullable=False, unique=True)
     
     # 메타 정보

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List, Optional
 from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
@@ -38,13 +39,12 @@ def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]
 
 def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meeting:
     """새 모임 생성"""
-    # location_choice_type 문자열을 Enum으로 변환
+    # location_choice_type 문자열을 Enum 객체로 변환 (SQLAlchemy가 자동 처리)
     location_choice_type_enum = None
     if meeting.location_choice_type:
         try:
             location_choice_type_enum = LocationChoiceType(meeting.location_choice_type)
         except ValueError:
-            # 유효하지 않은 값인 경우 None으로 설정
             location_choice_type_enum = None
     
     db_meeting = Meeting(
@@ -52,7 +52,7 @@ def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meet
         purpose=meeting.purpose,
         creator_id=creator_id,
         is_one_place=meeting.is_one_place,
-        location_choice_type=location_choice_type_enum,
+        location_choice_type=location_choice_type_enum,  # Enum 객체 전달
         location_choice_value=meeting.location_choice_value,
         preference_place=meeting.preference_place,
         deadline=meeting.deadline,
@@ -81,9 +81,9 @@ def update_meeting(db: Session, meeting_id: UUID, meeting_update: MeetingUpdate)
         db_meeting.is_one_place = meeting_update.is_one_place
     if meeting_update.location_choice_type is not None:
         try:
+            # 문자열을 Enum 객체로 변환 (SQLAlchemy가 자동 처리)
             db_meeting.location_choice_type = LocationChoiceType(meeting_update.location_choice_type)
         except ValueError:
-            # 유효하지 않은 값인 경우 None으로 설정
             db_meeting.location_choice_type = None
     if meeting_update.location_choice_value is not None:
         db_meeting.location_choice_value = meeting_update.location_choice_value
