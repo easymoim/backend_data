@@ -33,4 +33,3 @@ class Participant(Base):
     meeting = relationship("Meeting", back_populates="participants")
     user = relationship("User", back_populates="participants")
     time_votes = relationship("TimeVote", back_populates="participant", cascade="all, delete-orphan")
-

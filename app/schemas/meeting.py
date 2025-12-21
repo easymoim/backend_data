@@ -3,8 +3,8 @@ from datetime import datetime
 from uuid import UUID
 from typing import Optional, List
 
+from app.models.meeting import MeetingPurpose, LocationChoiceType
 from app.schemas.user import UserResponse
-from app.models.meeting import LocationChoiceType
 
 
 class MeetingBase(BaseModel):
