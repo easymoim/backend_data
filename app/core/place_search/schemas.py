@@ -312,6 +312,9 @@ class LLMRecommendationResult(BaseModel):
     )
     summary: str = Field(..., description="전체 추천 요약")
     
+    # 중간 위치 정보
+    center_location: Optional[str] = Field(None, description="중간 위치 (예: 강남역, 홍대 등)")
+    
     # 메타 정보
     meeting_context_summary: str = Field(..., description="모임 조건 요약")
     total_candidates: int = Field(..., description="검토한 총 후보 수")

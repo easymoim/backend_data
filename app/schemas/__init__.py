@@ -14,6 +14,11 @@ from app.schemas.place_candidate import (
     PlaceCandidateUpdate,
 )
 from app.schemas.place_vote import PlaceVoteCreate, PlaceVoteResponse, PlaceVoteUpdate
+from app.schemas.place_recommendation import (
+    PlaceRecommendationRequest,
+    PlaceRecommendationResponse,
+    RecommendedPlace,
+)
 
 __all__ = [
     "UserCreate",
@@ -40,5 +45,8 @@ __all__ = [
     "PlaceVoteCreate",
     "PlaceVoteResponse",
     "PlaceVoteUpdate",
+    "PlaceRecommendationRequest",
+    "PlaceRecommendationResponse",
+    "RecommendedPlace",
 ]
 

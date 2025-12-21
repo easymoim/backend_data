@@ -545,12 +545,61 @@ async def analyze_meeting_data(
     # 딕셔너리를 PlacePreference로 변환
     from .schemas import FoodType, AtmosphereType, ConditionType
     
+    # DB 값 → enum 값 정규화 매핑
+    FOOD_TYPE_NORMALIZE = {
+        "고기/구이": "고기",
+        "고기구이": "고기",
+        "카페/디저트": "카페",
+        "술집/바": "술집",
+    }
+    
+    ATMOSPHERE_NORMALIZE = {
+        "활기찬/왁자지껄한": "활기찬",
+        "로맨틱한/분위기 좋은": "로맨틱한",
+        "모던한/세련된": "모던한",
+    }
+    
+    CONDITION_NORMALIZE = {
+        "룸/개인실": "개별룸",
+    }
+    
+    def normalize_food(f: str) -> str:
+        return FOOD_TYPE_NORMALIZE.get(f, f)
+    
+    def normalize_atmosphere(a: str) -> str:
+        return ATMOSPHERE_NORMALIZE.get(a, a)
+    
+    def normalize_condition(c: str) -> str:
+        return CONDITION_NORMALIZE.get(c, c)
+    
+    def safe_food_type(f: str) -> FoodType | None:
+        try:
+            return FoodType(normalize_food(f))
+        except ValueError:
+            return None
+    
+    def safe_atmosphere_type(a: str) -> AtmosphereType | None:
+        try:
+            return AtmosphereType(normalize_atmosphere(a))
+        except ValueError:
+            return None
+    
+    def safe_condition_type(c: str) -> ConditionType | None:
+        try:
+            return ConditionType(normalize_condition(c))
+        except ValueError:
+            return None
+    
     pref_objects = []
     for pref in preferences:
+        food_types = [ft for f in pref.get("food_types", []) if (ft := safe_food_type(f))]
+        atmospheres = [at for a in pref.get("atmospheres", []) if (at := safe_atmosphere_type(a))]
+        conditions = [ct for c in pref.get("conditions", []) if (ct := safe_condition_type(c))]
+        
         pref_objects.append(PlacePreference(
-            food_types=[FoodType(f) for f in pref.get("food_types", [])],
-            atmospheres=[AtmosphereType(a) for a in pref.get("atmospheres", [])],
-            conditions=[ConditionType(c) for c in pref.get("conditions", [])],
+            food_types=food_types,
+            atmospheres=atmospheres,
+            conditions=conditions,
         ))
     
     collector = MeetingDataCollector(kakao_client=kakao_client)
