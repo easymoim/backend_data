@@ -17,7 +17,6 @@ from .schemas import (
     PlaceRecommendation,
     LLMRecommendationResult,
     LLMPromptContext,
-    LocationChoiceType,
 )
 
 
@@ -240,14 +239,14 @@ class LLMRecommender:
 """
         
         # 장소 선택 방식별 추가 정보
-        if choice_type == LocationChoiceType.CENTER_LOCATION:
+        if choice_type == "center_location":
             meeting_info += f"- **중심 위치 지역**: {prompt_context.center_district or '미정'}\n"
-        elif choice_type == LocationChoiceType.PREFERENCE_AREA:
+        elif choice_type == "preference_area":
             meeting_info += f"- **선호 지역**: {meeting_context.preferred_district or '미정'}\n"
             if meeting_context.district_votes:
                 votes_str = ", ".join([f"{k}({v}표)" for k, v in meeting_context.district_votes.items()])
                 meeting_info += f"- **지역 투표 결과**: {votes_str}\n"
-        elif choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+        elif choice_type == "preference_subway":
             meeting_info += f"- **선호 지하철역**: {meeting_context.preferred_station or '미정'}\n"
             if meeting_context.station_votes:
                 votes_str = ", ".join([f"{k}역({v}표)" for k, v in meeting_context.station_votes.items()])
@@ -314,7 +313,7 @@ class LLMRecommender:
         
         # 장소 선택 방식별 추천 기준 조정
         extra_criteria = ""
-        if choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+        if choice_type == "preference_subway":
             extra_criteria = "6. 지하철역과의 거리 (도보 접근성)\n"
         
         prompt = f"""당신은 모임 장소 추천 전문가입니다. 
@@ -439,6 +438,7 @@ JSON 형식으로만 응답해주세요.
         return LLMRecommendationResult(
             recommendations=recommendations,
             summary=data.get("summary", "추천이 완료되었습니다."),
+            center_location=context.center_district,
             meeting_context_summary=context_summary,
             total_candidates=len(candidates),
             model_used=self.model,
@@ -478,6 +478,7 @@ JSON 형식으로만 응답해주세요.
         return LLMRecommendationResult(
             recommendations=recommendations,
             summary=f"기본 추천 결과입니다. (파싱 오류: {error})",
+            center_location=context.center_district,
             meeting_context_summary=f"{context.center_district}, {context.participant_count}명, {purpose_kr}",
             total_candidates=len(candidates),
             model_used=self.model,

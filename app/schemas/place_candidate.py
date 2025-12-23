@@ -7,7 +7,7 @@ from app.models.place_candidate import LocationType
 class PlaceCandidateBase(BaseModel):
     """장소 후보 기본 스키마"""
     meeting_id: UUID
-    location: Optional[str] = None
+    location: Optional[Dict[str, Any]] = None  # LLM 추천 결과 JSON
     preference_subway: Optional[Dict[str, Any]] = None
     preference_area: Optional[Dict[str, Any]] = None
     food: Optional[str] = None
@@ -22,7 +22,7 @@ class PlaceCandidateCreate(PlaceCandidateBase):
 
 class PlaceCandidateUpdate(BaseModel):
     """장소 후보 업데이트 스키마"""
-    location: Optional[str] = None
+    location: Optional[Dict[str, Any]] = None  # LLM 추천 결과 JSON
     preference_subway: Optional[Dict[str, Any]] = None
     preference_area: Optional[Dict[str, Any]] = None
     food: Optional[str] = None

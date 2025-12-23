@@ -65,5 +65,6 @@ class MeetingResponse(MeetingBase):
     creator: Optional[UserResponse] = None
 
     class Config:
+        from_attributes = True
         orm_mode = True
         use_enum_values = True
