@@ -13,6 +13,5 @@ dependencies = [
     "python-multipart==0.0.6",
     "email-validator==2.1.0",
     "httpx==0.25.2",
-    "httpx>=0.25.0",  # 카카오 API 비동기 HTTP 클라이언트
-    "google-generativeai>=0.3.0"  # Gemini API
+    "httpx>=0.25.0"  # 카카오 API 비동기 HTTP 클라이언트 + Gemini REST API
 ]

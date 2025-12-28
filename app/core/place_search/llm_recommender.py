@@ -3,12 +3,14 @@ LLM 기반 장소 추천 모듈
 
 3단계: LLM 기반 추천 및 선택 (LLM Recommendation & Selection)
 - 모임 컨텍스트와 장소 후보를 기반으로 최적의 장소 추천
-- Gemini API 사용
+- Gemini API 사용 (REST API로 호출 - Vercel 서버리스 환경 호환)
 """
 
 import json
 import os
 from typing import Optional
+
+import httpx
 
 from .schemas import (
     MeetingContext,
@@ -86,20 +88,16 @@ class LLMRecommender:
         """
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
-        self._client = None
+        # Gemini REST API 엔드포인트
+        self._api_base = "https://generativelanguage.googleapis.com/v1beta/models"
     
-    def _get_client(self):
-        """Gemini 클라이언트 초기화 (지연 로딩)"""
-        if self._client is None:
-            if not self.api_key:
-                raise ValueError(
-                    "Gemini API 키가 필요합니다. "
-                    "생성자에 api_key를 전달하거나 GEMINI_API_KEY 환경변수를 설정하세요."
-                )
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            self._client = genai.GenerativeModel(self.model)
-        return self._client
+    def _validate_api_key(self):
+        """API 키 유효성 검사"""
+        if not self.api_key:
+            raise ValueError(
+                "Gemini API 키가 필요합니다. "
+                "생성자에 api_key를 전달하거나 GEMINI_API_KEY 환경변수를 설정하세요."
+            )
     
     # ============================================================
     # 메인 추천 API
@@ -359,11 +357,36 @@ JSON 형식으로만 응답해주세요.
     # ============================================================
     
     async def _call_llm(self, prompt: str) -> str:
-        """Gemini API 호출"""
-        client = self._get_client()
+        """Gemini API 호출 (REST API 사용 - Vercel 서버리스 호환)"""
+        self._validate_api_key()
         
-        response = client.generate_content(prompt)
-        return response.text
+        url = f"{self._api_base}/{self.model}:generateContent?key={self.api_key}"
+        
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": prompt}
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 4096,
+            }
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # 응답에서 텍스트 추출
+            try:
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+            except (KeyError, IndexError) as e:
+                raise ValueError(f"Gemini API 응답 파싱 실패: {data}") from e
     
     # ============================================================
     # 응답 파싱
