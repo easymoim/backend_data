@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import text, or_, func
+from sqlalchemy import text, or_, func, Integer
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
@@ -133,15 +133,12 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
     - status가 "confirmed"가 아닌 모임만 조회
     - participant_stats 계산 포함
     """
-    # 1. 사용자가 호스트인 모임들 조회
-    # status가 "confirmed"가 아닌 모임만 조회 (None 포함)
     host_meetings = db.query(Meeting).filter(
         Meeting.creator_id == user_id,
         Meeting.deleted_at.is_(None),
         or_(Meeting.status.is_(None), Meeting.status != "confirmed")
     ).all()
     
-    # 2. 사용자가 참가자인 모임들 조회 (Participant 테이블 조인)
     participant_meetings = db.query(Meeting).join(
         Participant, Meeting.id == Participant.meeting_id
     ).filter(
@@ -150,7 +147,7 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         or_(Meeting.status.is_(None), Meeting.status != "confirmed")
     ).all()
     
-    # 3. 중복 제거 (호스트이면서 참가자일 수도 있음)
+    # 중복 제거 (호스트이면서 참가자일 수도 있음)
     all_meetings = {}
     for meeting in host_meetings:
         all_meetings[meeting.id] = (meeting, True)  # (meeting, is_host)
@@ -159,14 +156,13 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         if meeting.id not in all_meetings:
             all_meetings[meeting.id] = (meeting, False)  # 참가자만
     
-    # 4. 모든 모임의 참가자 통계를 한 번에 조회 (N+1 쿼리 문제 해결)
+    # 모든 모임의 참가자 통계를 한 번에 조회 (N+1 쿼리 문제 해결)
     meeting_ids = [meeting.id for meeting, _ in all_meetings.values()]
     
     if not meeting_ids:
         return []
     
     # 참가자 통계를 한 번의 쿼리로 조회
-    # PostgreSQL에서 boolean을 integer로 변환할 때 CASE 문 사용
     participant_stats_query = db.query(
         Participant.meeting_id,
         func.count(Participant.id).label('total'),
@@ -189,13 +185,10 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         for meeting_id, total, responded in participant_stats_query
     }
     
-    # 5. 결과 생성
+    # 결과 생성
     result = []
     for meeting, is_host in all_meetings.values():
-        # 통계 가져오기 (없으면 기본값)
         stats = stats_dict.get(meeting.id, {"total": 0, "responded": 0})
-        
-        # purpose는 List[str]이지만 첫 번째 값만 사용 (또는 문자열로 변환)
         purpose_str = meeting.purpose[0] if meeting.purpose and len(meeting.purpose) > 0 else ""
         
         result.append({
