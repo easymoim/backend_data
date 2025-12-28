@@ -4,6 +4,7 @@ from typing import List
 from app.database import get_db
 from app import crud
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.schemas.meeting import MeetingSummaryResponse
 
 router = APIRouter()
 
@@ -54,4 +55,21 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
             detail="사용자를 찾을 수 없습니다."
         )
     return db_user
+
+
+@router.get("/{user_id}/meetings/summary", response_model=MeetingSummaryResponse)
+def get_meetings_summary(user_id: int, db: Session = Depends(get_db)):
+    """사용자의 모임 요약 조회 (호스트/참가자 모두 포함)"""
+    # 사용자 존재 확인
+    db_user = crud.user.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="사용자를 찾을 수 없습니다."
+        )
+    
+    # 모임 요약 조회
+    meetings_data = crud.meeting.get_meetings_summary_by_user(db, user_id=user_id)
+    
+    return {"meetings": meetings_data}
 
