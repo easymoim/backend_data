@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, List, Any, Union
 from uuid import UUID
 from app.models.place_candidate import LocationType
 
@@ -8,8 +8,8 @@ class PlaceCandidateBase(BaseModel):
     """장소 후보 기본 스키마"""
     meeting_id: UUID
     location: Optional[Dict[str, Any]] = None  # LLM 추천 결과 JSON
-    preference_subway: Optional[Dict[str, Any]] = None
-    preference_area: Optional[Dict[str, Any]] = None
+    preference_subway: Optional[Union[List[str], Dict[str, Any]]] = None  # ["서울역", "종각"]
+    preference_area: Optional[Union[List[str], Dict[str, Any]]] = None  # ["강남구", "마포구"]
     food: Optional[str] = None
     condition: Optional[str] = None
     location_type: Optional[str] = None  # center_location, preference_area, preference_subway
@@ -23,8 +23,8 @@ class PlaceCandidateCreate(PlaceCandidateBase):
 class PlaceCandidateUpdate(BaseModel):
     """장소 후보 업데이트 스키마"""
     location: Optional[Dict[str, Any]] = None  # LLM 추천 결과 JSON
-    preference_subway: Optional[Dict[str, Any]] = None
-    preference_area: Optional[Dict[str, Any]] = None
+    preference_subway: Optional[Union[List[str], Dict[str, Any]]] = None  # ["서울역", "종각"]
+    preference_area: Optional[Union[List[str], Dict[str, Any]]] = None  # ["강남구", "마포구"]
     food: Optional[str] = None
     condition: Optional[str] = None
     location_type: Optional[str] = None
