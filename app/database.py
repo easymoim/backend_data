@@ -5,6 +5,7 @@ from sqlalchemy.pool import NullPool
 from pydantic import BaseSettings
 from urllib.parse import quote_plus
 import ssl
+import os
 
 class Settings(BaseSettings):
     """애플리케이션 설정"""
@@ -19,6 +20,10 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # DATABASE_URL 구성
+# Connection Pooler 사용 여부 확인 (서버리스 환경에서 성능 향상)
+# Supabase Connection Pooler는 포트 6543을 사용
+use_pooler = os.getenv("USE_CONNECTION_POOLER", "true").lower() == "true"
+
 if not settings.DATABASE_URL:
     if not settings.DATABASE_PASSWORD:
         raise ValueError(
@@ -26,10 +31,15 @@ if not settings.DATABASE_URL:
             "또는 Supabase 대시보드에서 제공하는 전체 DATABASE_URL을 .env 파일에 직접 설정할 수 있습니다."
         )
     encoded_password = quote_plus(settings.DATABASE_PASSWORD)
-    # pg8000 드라이버 사용
-    db_url = f"postgresql+pg8000://postgres:{encoded_password}@db.wxuunspyyvqndpodtesy.supabase.co:5432/postgres"
+    # Connection Pooler 사용 (포트 6543) 또는 직접 연결 (포트 5432)
+    # Pooler는 서버리스 환경에서 연결 재사용으로 성능 향상
+    port = "6543" if use_pooler else "5432"
+    db_url = f"postgresql+pg8000://postgres:{encoded_password}@db.wxuunspyyvqndpodtesy.supabase.co:{port}/postgres"
 else:
     db_url = settings.DATABASE_URL
+    # Connection Pooler 포트로 변경 (서버리스 환경 최적화)
+    if use_pooler and ":5432/" in db_url:
+        db_url = db_url.replace(":5432/", ":6543/")
     # postgresql:// → postgresql+pg8000://
     if db_url.startswith("postgresql://"):
         db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
@@ -42,7 +52,6 @@ ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
 # 환경에 따른 설정
-import os
 is_production = os.getenv("ENVIRONMENT", "development").lower() == "production" or os.getenv("VERCEL") == "1"
 db_echo = os.getenv("DB_ECHO", "false").lower() == "true"  # 환경 변수로 제어 가능
 
