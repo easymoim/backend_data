@@ -72,12 +72,6 @@ if allowed_origins_env:
 
 allow_credentials = True
 
-# 디버깅용 로그 (프로덕션에서도 출력하여 문제 진단 가능)
-print(f"🌍 CORS 설정: {len(allowed_origins)}개 origin 허용")
-print(f"   허용된 origins: {allowed_origins}")
-print(f"   환경: {'프로덕션' if is_production else '개발'}")
-print(f"   Vercel: {'예' if is_vercel else '아니오'}")
-
 # CORS 미들웨어는 다른 미들웨어보다 먼저 등록되어야 함
 # Vercel 환경에서도 확실하게 작동하도록 설정
 app.add_middleware(
