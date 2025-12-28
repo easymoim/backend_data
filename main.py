@@ -34,23 +34,34 @@ app = FastAPI(
 )
 
 # CORS 설정
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 if is_production:
     # 프로덕션: 환경 변수에서 허용 도메인 목록 가져오기
-    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
-    if not allowed_origins or "*" in allowed_origins:
-        # 프로덕션에서 *는 보안상 위험하므로 기본값 사용
-        allowed_origins = ["*"]  # 실제 배포 시 특정 도메인으로 변경 필요
+    if allowed_origins_env:
+        allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    else:
+        allowed_origins = []  # 프로덕션에서는 명시적으로 설정 필요
+    allow_credentials = True
 else:
-    # 개발 환경: 모든 도메인 허용
-    allowed_origins = ["*"]
+    # 개발 환경: localhost 도메인 명시적으로 허용
+    # allow_credentials=True일 때는 "*"를 사용할 수 없으므로 명시적으로 지정
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
+    # 개발 환경에서도 credentials 허용
+    allow_credentials = True
 
+# CORS 미들웨어는 다른 미들웨어보다 먼저 등록되어야 함
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # API 라우터 등록

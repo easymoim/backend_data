@@ -156,18 +156,35 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         if meeting.id not in all_meetings:
             all_meetings[meeting.id] = (meeting, False)  # 참가자만
     
-    # 4. 각 모임에 대해 participant_stats 계산
+    # 4. 모든 모임의 참가자 통계를 한 번에 조회 (N+1 쿼리 문제 해결)
+    meeting_ids = [meeting.id for meeting, _ in all_meetings.values()]
+    
+    if not meeting_ids:
+        return []
+    
+    # 참가자 통계를 한 번의 쿼리로 조회
+    participant_stats_query = db.query(
+        Participant.meeting_id,
+        func.count(Participant.id).label('total'),
+        func.sum(func.cast(Participant.has_responded, func.Integer)).label('responded')
+    ).filter(
+        Participant.meeting_id.in_(meeting_ids)
+    ).group_by(Participant.meeting_id).all()
+    
+    # 통계를 딕셔너리로 변환
+    stats_dict = {
+        meeting_id: {
+            "total": total or 0,
+            "responded": int(responded) if responded else 0
+        }
+        for meeting_id, total, responded in participant_stats_query
+    }
+    
+    # 5. 결과 생성
     result = []
     for meeting, is_host in all_meetings.values():
-        # 참가자 통계 계산
-        total_participants = db.query(func.count(Participant.id)).filter(
-            Participant.meeting_id == meeting.id
-        ).scalar() or 0
-        
-        responded_participants = db.query(func.count(Participant.id)).filter(
-            Participant.meeting_id == meeting.id,
-            Participant.has_responded == True
-        ).scalar() or 0
+        # 통계 가져오기 (없으면 기본값)
+        stats = stats_dict.get(meeting.id, {"total": 0, "responded": 0})
         
         # purpose는 List[str]이지만 첫 번째 값만 사용 (또는 문자열로 변환)
         purpose_str = meeting.purpose[0] if meeting.purpose and len(meeting.purpose) > 0 else ""
@@ -180,10 +197,7 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
             "creator_id": meeting.creator_id,
             "deadline": meeting.deadline,
             "expected_participant_count": meeting.expected_participant_count,
-            "participant_stats": {
-                "total": total_participants,
-                "responded": responded_participants
-            },
+            "participant_stats": stats,
             "is_host": is_host
         })
     
