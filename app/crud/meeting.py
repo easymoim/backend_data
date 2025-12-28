@@ -5,6 +5,7 @@ from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
 from app.models.participant import Participant
 from app.schemas.meeting import MeetingCreate, MeetingUpdate
+from sqlalchemy import case
 
 
 def get_meeting(db: Session, meeting_id: UUID) -> Optional[Meeting]:
@@ -163,10 +164,16 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         return []
     
     # 참가자 통계를 한 번의 쿼리로 조회
+    # PostgreSQL에서 boolean을 integer로 변환할 때 CASE 문 사용
     participant_stats_query = db.query(
         Participant.meeting_id,
         func.count(Participant.id).label('total'),
-        func.sum(func.cast(Participant.has_responded, func.Integer)).label('responded')
+        func.sum(
+            case(
+                (Participant.has_responded == True, 1),
+                else_=0
+            )
+        ).label('responded')
     ).filter(
         Participant.meeting_id.in_(meeting_ids)
     ).group_by(Participant.meeting_id).all()

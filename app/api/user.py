@@ -60,16 +60,28 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
 @router.get("/{user_id}/meetings/summary", response_model=MeetingSummaryResponse)
 def get_meetings_summary(user_id: int, db: Session = Depends(get_db)):
     """사용자의 모임 요약 조회 (호스트/참가자 모두 포함)"""
-    # 사용자 존재 확인
-    db_user = crud.user.get_user(db, user_id=user_id)
-    if db_user is None:
+    try:
+        # 사용자 존재 확인
+        db_user = crud.user.get_user(db, user_id=user_id)
+        if db_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="사용자를 찾을 수 없습니다."
+            )
+        
+        # 모임 요약 조회
+        meetings_data = crud.meeting.get_meetings_summary_by_user(db, user_id=user_id)
+        
+        return {"meetings": meetings_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"❌ 에러 발생: {str(e)}")
+        print(f"상세 에러:\n{error_detail}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="사용자를 찾을 수 없습니다."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"모임 요약 조회 중 오류가 발생했습니다: {str(e)}"
         )
-    
-    # 모임 요약 조회
-    meetings_data = crud.meeting.get_meetings_summary_by_user(db, user_id=user_id)
-    
-    return {"meetings": meetings_data}
 
