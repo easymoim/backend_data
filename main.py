@@ -23,7 +23,10 @@ from app.models import (
 from app.api import api_router
 
 # 개발 환경에서만 테이블 자동 생성 (프로덕션에서는 마이그레이션 사용)
-is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+# Vercel에서는 VERCEL 환경 변수가 있음
+is_vercel = os.getenv("VERCEL") == "1"
+is_production = os.getenv("ENVIRONMENT", "development").lower() == "production" or is_vercel
+
 if not is_production:
     Base.metadata.create_all(bind=engine)
 
@@ -34,23 +37,44 @@ app = FastAPI(
 )
 
 # CORS 설정
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
-if is_production:
-    # 프로덕션: 환경 변수에서 허용 도메인 목록 가져오기
-    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
-    if not allowed_origins or "*" in allowed_origins:
-        # 프로덕션에서 *는 보안상 위험하므로 기본값 사용
-        allowed_origins = ["*"]  # 실제 배포 시 특정 도메인으로 변경 필요
-else:
-    # 개발 환경: 모든 도메인 허용
-    allowed_origins = ["*"]
+# Vercel 배포 환경에서는 항상 localhost를 허용하도록 설정
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 
+# 기본 localhost origins (항상 포함)
+localhost_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+
+# 허용할 origins 초기화
+allowed_origins = localhost_origins.copy()
+
+# 환경 변수에서 추가 origins 가져오기
+if allowed_origins_env:
+    env_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    for origin in env_origins:
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
+
+allow_credentials = True
+
+# 디버깅용 로그 (프로덕션에서는 제거 가능)
+if not is_production:
+    print(f"🌍 CORS 설정: {len(allowed_origins)}개 origin 허용")
+    print(f"   허용된 origins: {allowed_origins}")
+
+# CORS 미들웨어는 다른 미들웨어보다 먼저 등록되어야 함
+# Vercel 환경에서도 확실하게 작동하도록 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins if allowed_origins else ["*"],  # 빈 리스트 방지
+    allow_credentials=allow_credentials if allowed_origins else False,  # "*"일 때는 credentials 비활성화
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],  # 명시적으로 지정
+    allow_headers=["*"],  # 모든 헤더 허용
+    expose_headers=["*"],  # 모든 헤더 노출
+    max_age=3600,  # preflight 요청 캐시 시간 (1시간)
 )
 
 # API 라우터 등록
@@ -67,6 +91,12 @@ async def root():
 async def health_check():
     """헬스 체크 엔드포인트"""
     return {"status": "healthy"}
+
+
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """OPTIONS 요청 핸들러 (CORS preflight)"""
+    return {"message": "OK"}
 
 
 if __name__ == "__main__":

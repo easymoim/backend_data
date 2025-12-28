@@ -5,6 +5,7 @@ from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
 from app.models.participant import Participant
 from app.schemas.meeting import MeetingCreate, MeetingUpdate
+from sqlalchemy import case
 
 
 def get_meeting(db: Session, meeting_id: UUID) -> Optional[Meeting]:
@@ -20,14 +21,14 @@ def get_meetings_by_creator(db: Session, creator_id: int, skip: int = 0, limit: 
     return db.query(Meeting).filter(
         Meeting.creator_id == creator_id,
         Meeting.deleted_at.is_(None)
-    ).offset(skip).limit(limit).all()
+    ).order_by(Meeting.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeting]:
     """모든 모임 목록 조회 (삭제되지 않은 모임만)"""
     return db.query(Meeting).filter(
         Meeting.deleted_at.is_(None)
-    ).offset(skip).limit(limit).all()
+    ).order_by(Meeting.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
@@ -64,7 +65,9 @@ def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meet
     )
     db.add(db_meeting)
     db.commit()
-    db.refresh(db_meeting)
+    # refresh는 필요한 경우에만 (자동 생성된 필드가 필요한 경우)
+    # UUID와 timestamp는 이미 설정되어 있으므로 refresh 생략 가능
+    db.refresh(db_meeting)  # id, created_at, updated_at을 위해 유지
     return db_meeting
 
 
@@ -156,18 +159,41 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
         if meeting.id not in all_meetings:
             all_meetings[meeting.id] = (meeting, False)  # 참가자만
     
-    # 4. 각 모임에 대해 participant_stats 계산
+    # 4. 모든 모임의 참가자 통계를 한 번에 조회 (N+1 쿼리 문제 해결)
+    meeting_ids = [meeting.id for meeting, _ in all_meetings.values()]
+    
+    if not meeting_ids:
+        return []
+    
+    # 참가자 통계를 한 번의 쿼리로 조회
+    # PostgreSQL에서 boolean을 integer로 변환할 때 CASE 문 사용
+    participant_stats_query = db.query(
+        Participant.meeting_id,
+        func.count(Participant.id).label('total'),
+        func.sum(
+            case(
+                (Participant.has_responded == True, 1),
+                else_=0
+            )
+        ).label('responded')
+    ).filter(
+        Participant.meeting_id.in_(meeting_ids)
+    ).group_by(Participant.meeting_id).all()
+    
+    # 통계를 딕셔너리로 변환
+    stats_dict = {
+        meeting_id: {
+            "total": total or 0,
+            "responded": int(responded) if responded else 0
+        }
+        for meeting_id, total, responded in participant_stats_query
+    }
+    
+    # 5. 결과 생성
     result = []
     for meeting, is_host in all_meetings.values():
-        # 참가자 통계 계산
-        total_participants = db.query(func.count(Participant.id)).filter(
-            Participant.meeting_id == meeting.id
-        ).scalar() or 0
-        
-        responded_participants = db.query(func.count(Participant.id)).filter(
-            Participant.meeting_id == meeting.id,
-            Participant.has_responded == True
-        ).scalar() or 0
+        # 통계 가져오기 (없으면 기본값)
+        stats = stats_dict.get(meeting.id, {"total": 0, "responded": 0})
         
         # purpose는 List[str]이지만 첫 번째 값만 사용 (또는 문자열로 변환)
         purpose_str = meeting.purpose[0] if meeting.purpose and len(meeting.purpose) > 0 else ""
@@ -180,10 +206,7 @@ def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, An
             "creator_id": meeting.creator_id,
             "deadline": meeting.deadline,
             "expected_participant_count": meeting.expected_participant_count,
-            "participant_stats": {
-                "total": total_participants,
-                "responded": responded_participants
-            },
+            "participant_stats": stats,
             "is_host": is_host
         })
     
