@@ -76,6 +76,7 @@ async def recommend_places(
         )
     
     try:
+        print(f"[DEBUG] Starting recommendation pipeline with input: {input_data}")
         result = await full_recommendation_pipeline(
             purpose=input_data["purpose"],
             locations=input_data["locations"],
@@ -90,7 +91,12 @@ async def recommend_places(
             preferred_station=input_data.get("preferred_station"),
             station_votes=input_data.get("station_votes"),
         )
+        print(f"[DEBUG] Pipeline completed successfully")
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"[ERROR] Pipeline failed: {str(e)}")
+        print(f"[ERROR] Full traceback:\n{error_traceback}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"장소 추천 중 오류가 발생했습니다: {str(e)}"
