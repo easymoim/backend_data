@@ -5,6 +5,7 @@ from uuid import UUID
 from app.database import get_db
 from app import crud
 from app.schemas.meeting import MeetingCreate, MeetingUpdate, MeetingResponse
+from app.models.user import User
 
 router = APIRouter()
 
@@ -12,9 +13,10 @@ router = APIRouter()
 @router.post("/", response_model=MeetingResponse, status_code=status.HTTP_201_CREATED)
 def create_meeting(meeting: MeetingCreate, creator_id: int, db: Session = Depends(get_db)):
     """새 모임 생성"""
-    # 생성자 존재 확인
-    db_user = crud.user.get_user(db, user_id=creator_id)
-    if not db_user:
+    # 생성자 존재 확인 (외래키 제약조건이 있지만 명시적 확인으로 더 나은 에러 메시지 제공)
+    # 성능 최적화: exists() 사용으로 전체 객체 로딩 방지
+    user_exists = db.query(User.id).filter(User.id == creator_id).first()
+    if not user_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="생성자를 찾을 수 없습니다."

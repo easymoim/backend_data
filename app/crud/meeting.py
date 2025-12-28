@@ -21,14 +21,14 @@ def get_meetings_by_creator(db: Session, creator_id: int, skip: int = 0, limit: 
     return db.query(Meeting).filter(
         Meeting.creator_id == creator_id,
         Meeting.deleted_at.is_(None)
-    ).offset(skip).limit(limit).all()
+    ).order_by(Meeting.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_all_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[Meeting]:
     """모든 모임 목록 조회 (삭제되지 않은 모임만)"""
     return db.query(Meeting).filter(
         Meeting.deleted_at.is_(None)
-    ).offset(skip).limit(limit).all()
+    ).order_by(Meeting.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_meeting_by_share_code(db: Session, share_code: str) -> Optional[Meeting]:
@@ -65,7 +65,9 @@ def create_meeting(db: Session, meeting: MeetingCreate, creator_id: int) -> Meet
     )
     db.add(db_meeting)
     db.commit()
-    db.refresh(db_meeting)
+    # refresh는 필요한 경우에만 (자동 생성된 필드가 필요한 경우)
+    # UUID와 timestamp는 이미 설정되어 있으므로 refresh 생략 가능
+    db.refresh(db_meeting)  # id, created_at, updated_at을 위해 유지
     return db_meeting
 
 
