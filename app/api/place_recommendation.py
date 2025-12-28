@@ -139,45 +139,58 @@ async def recommend_places(
     )
     
     # DB에 저장 (기존 데이터가 있으면 업데이트)
-    existing_candidate = crud.place_candidate.get_place_candidate(
-        db, candidate_id=candidate_id
-    )
-    
-    if existing_candidate:
-        # 업데이트 - location_type은 반드시 소문자여야 함
-        location_type_value = str(input_data["location_choice_type"]).lower()
-        update_data = PlaceCandidateUpdate(
-            location=location_json,
-            preference_subway=[input_data.get("preferred_station")] if input_data.get("preferred_station") else None,
-            preference_area=[input_data.get("preferred_district")] if input_data.get("preferred_district") else None,
-            location_type=location_type_value,
+    try:
+        existing_candidate = crud.place_candidate.get_place_candidate(
+            db, candidate_id=candidate_id
         )
-        place_candidate = crud.place_candidate.update_place_candidate(
-            db,
-            candidate_id=candidate_id,
-            candidate_update=update_data
-        )
-    else:
-        # 새로 생성 - location_type은 반드시 소문자여야 함 (DB enum이 소문자만 허용)
-        raw_location_type = input_data["location_choice_type"]
-        location_type_value = str(raw_location_type).lower() if raw_location_type else "center_location"
         
-        # 디버그 로그
-        print(f"[DEBUG] raw_location_type: {raw_location_type}")
-        print(f"[DEBUG] location_type_value (after lower): {location_type_value}")
+        if existing_candidate:
+            # 업데이트 - location_type은 반드시 소문자여야 함
+            location_type_value = str(input_data["location_choice_type"]).lower()
+            update_data = PlaceCandidateUpdate(
+                location=location_json,
+                preference_subway=[input_data.get("preferred_station")] if input_data.get("preferred_station") else None,
+                preference_area=[input_data.get("preferred_district")] if input_data.get("preferred_district") else None,
+                location_type=location_type_value,
+            )
+            place_candidate = crud.place_candidate.update_place_candidate(
+                db,
+                candidate_id=candidate_id,
+                candidate_update=update_data
+            )
+        else:
+            # 새로 생성 - location_type은 반드시 소문자여야 함 (DB enum이 소문자만 허용)
+            raw_location_type = input_data["location_choice_type"]
+            location_type_value = str(raw_location_type).lower() if raw_location_type else "center_location"
+            
+            # 디버그 로그
+            print(f"[DEBUG] raw_location_type: {raw_location_type}")
+            print(f"[DEBUG] location_type_value (after lower): {location_type_value}")
+            print(f"[DEBUG] candidate_id: {candidate_id}")
+            print(f"[DEBUG] meeting_id: {request.meeting_id}")
+            
+            place_candidate = PlaceCandidate(
+                id=candidate_id,
+                meeting_id=request.meeting_id,
+                location=location_json,
+                preference_subway=[input_data.get("preferred_station")] if input_data.get("preferred_station") else None,
+                preference_area=[input_data.get("preferred_district")] if input_data.get("preferred_district") else None,
+                location_type=location_type_value,
+            )
+            db.add(place_candidate)
         
-        place_candidate = PlaceCandidate(
-            id=candidate_id,
-            meeting_id=request.meeting_id,
-            location=location_json,
-            preference_subway=[input_data.get("preferred_station")] if input_data.get("preferred_station") else None,
-            preference_area=[input_data.get("preferred_district")] if input_data.get("preferred_district") else None,
-            location_type=location_type_value,
+        db.commit()
+        db.refresh(place_candidate)
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"[ERROR] DB save failed: {str(e)}")
+        print(f"[ERROR] Full traceback:\n{error_traceback}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"DB 저장 중 오류가 발생했습니다: {str(e)}"
         )
-        db.add(place_candidate)
-    
-    db.commit()
-    db.refresh(place_candidate)
     
     # 6. 응답 생성
     return PlaceRecommendationResponse(
