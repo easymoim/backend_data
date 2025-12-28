@@ -68,3 +68,32 @@ class MeetingResponse(MeetingBase):
         from_attributes = True
         orm_mode = True
         use_enum_values = True
+
+
+class ParticipantStats(BaseModel):
+    """참가자 통계 스키마"""
+    total: int
+    responded: int
+
+
+class MeetingSummaryItem(BaseModel):
+    """모임 요약 항목 스키마"""
+    id: UUID
+    title: str  # name 필드를 title로 매핑
+    purpose: str  # purpose는 List[str]이지만 첫 번째 값만 사용하거나 문자열로 변환
+    status: Optional[str] = None
+    creator_id: int
+    deadline: Optional[datetime] = None
+    expected_participant_count: Optional[int] = None
+    participant_stats: ParticipantStats
+    is_host: bool
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
+        use_enum_values = True
+
+
+class MeetingSummaryResponse(BaseModel):
+    """모임 요약 응답 스키마"""
+    meetings: List[MeetingSummaryItem]

@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-from typing import List, Optional
+from sqlalchemy import text, or_, func
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from app.models.meeting import Meeting, LocationChoiceType
+from app.models.participant import Participant
 from app.schemas.meeting import MeetingCreate, MeetingUpdate
 
 
@@ -121,4 +122,70 @@ def delete_meeting(db: Session, meeting_id: UUID) -> bool:
     db.commit()
     db.refresh(db_meeting)
     return True
+
+
+def get_meetings_summary_by_user(db: Session, user_id: int) -> List[Dict[str, Any]]:
+    """
+    사용자의 모임 요약 조회 (호스트/참가자 모두 포함)
+    - status가 "confirmed"가 아닌 모임만 조회
+    - participant_stats 계산 포함
+    """
+    # 1. 사용자가 호스트인 모임들 조회
+    # status가 "confirmed"가 아닌 모임만 조회 (None 포함)
+    host_meetings = db.query(Meeting).filter(
+        Meeting.creator_id == user_id,
+        Meeting.deleted_at.is_(None),
+        or_(Meeting.status.is_(None), Meeting.status != "confirmed")
+    ).all()
+    
+    # 2. 사용자가 참가자인 모임들 조회 (Participant 테이블 조인)
+    participant_meetings = db.query(Meeting).join(
+        Participant, Meeting.id == Participant.meeting_id
+    ).filter(
+        Participant.user_id == user_id,
+        Meeting.deleted_at.is_(None),
+        or_(Meeting.status.is_(None), Meeting.status != "confirmed")
+    ).all()
+    
+    # 3. 중복 제거 (호스트이면서 참가자일 수도 있음)
+    all_meetings = {}
+    for meeting in host_meetings:
+        all_meetings[meeting.id] = (meeting, True)  # (meeting, is_host)
+    
+    for meeting in participant_meetings:
+        if meeting.id not in all_meetings:
+            all_meetings[meeting.id] = (meeting, False)  # 참가자만
+    
+    # 4. 각 모임에 대해 participant_stats 계산
+    result = []
+    for meeting, is_host in all_meetings.values():
+        # 참가자 통계 계산
+        total_participants = db.query(func.count(Participant.id)).filter(
+            Participant.meeting_id == meeting.id
+        ).scalar() or 0
+        
+        responded_participants = db.query(func.count(Participant.id)).filter(
+            Participant.meeting_id == meeting.id,
+            Participant.has_responded == True
+        ).scalar() or 0
+        
+        # purpose는 List[str]이지만 첫 번째 값만 사용 (또는 문자열로 변환)
+        purpose_str = meeting.purpose[0] if meeting.purpose and len(meeting.purpose) > 0 else ""
+        
+        result.append({
+            "id": meeting.id,
+            "title": meeting.name,
+            "purpose": purpose_str,
+            "status": meeting.status,
+            "creator_id": meeting.creator_id,
+            "deadline": meeting.deadline,
+            "expected_participant_count": meeting.expected_participant_count,
+            "participant_stats": {
+                "total": total_participants,
+                "responded": responded_participants
+            },
+            "is_host": is_host
+        })
+    
+    return result
 
