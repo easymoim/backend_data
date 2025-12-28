@@ -37,10 +37,23 @@ app = FastAPI(
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 if is_production:
     # 프로덕션: 환경 변수에서 허용 도메인 목록 가져오기
+    allowed_origins = []
     if allowed_origins_env:
         allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
-    else:
-        allowed_origins = []  # 프로덕션에서는 명시적으로 설정 필요
+    
+    # 개발용 localhost도 허용 (프론트엔드 개발 시 필요)
+    # 프로덕션에서도 개발 환경에서 테스트할 수 있도록 localhost 추가
+    localhost_origins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
+    # 중복 제거하면서 localhost 추가
+    for origin in localhost_origins:
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
+    
     allow_credentials = True
 else:
     # 개발 환경: localhost 도메인 명시적으로 허용
