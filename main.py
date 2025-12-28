@@ -48,8 +48,20 @@ localhost_origins = [
     "http://127.0.0.1:3001",
 ]
 
+# 프로덕션 도메인 (기본값으로 포함)
+production_origins = [
+    "https://easymoim.com",
+    "https://www.easymoim.com",
+]
+
 # 허용할 origins 초기화
 allowed_origins = localhost_origins.copy()
+
+# 프로덕션 환경에서는 프로덕션 도메인도 추가
+if is_production:
+    for origin in production_origins:
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
 
 # 환경 변수에서 추가 origins 가져오기
 if allowed_origins_env:
@@ -59,11 +71,6 @@ if allowed_origins_env:
             allowed_origins.append(origin)
 
 allow_credentials = True
-
-# 디버깅용 로그 (프로덕션에서는 제거 가능)
-if not is_production:
-    print(f"🌍 CORS 설정: {len(allowed_origins)}개 origin 허용")
-    print(f"   허용된 origins: {allowed_origins}")
 
 # CORS 미들웨어는 다른 미들웨어보다 먼저 등록되어야 함
 # Vercel 환경에서도 확실하게 작동하도록 설정
