@@ -20,25 +20,27 @@ def get_place_votes_by_meeting(db: Session, meeting_id: UUID) -> List[PlaceVote]
     return db.query(PlaceVote).filter(PlaceVote.meeting_id == meeting_id).all()
 
 
-def get_place_votes_by_time_candidate(db: Session, time_candidate_id: UUID) -> List[PlaceVote]:
-    """시간 후보별 장소 투표 목록 조회"""
-    return db.query(PlaceVote).filter(PlaceVote.time_candidate_id == time_candidate_id).all()
+def get_place_vote_by_participant_and_meeting(
+    db: Session, participant_id: UUID, meeting_id: UUID
+) -> Optional[PlaceVote]:
+    """참가자와 모임으로 장소 투표 조회"""
+    return db.query(PlaceVote).filter(
+        PlaceVote.participant_id == participant_id,
+        PlaceVote.meeting_id == meeting_id
+    ).first()
 
 
 def create_place_vote(db: Session, vote: PlaceVoteCreate) -> PlaceVote:
     """새 장소 투표 생성 (이미 존재하면 업데이트)"""
-    # 기존 투표 확인 (participant_id와 time_candidate_id 조합)
+    # 기존 투표 확인 (participant_id와 meeting_id 조합)
     existing_vote = db.query(PlaceVote).filter(
         PlaceVote.participant_id == vote.participant_id,
-        PlaceVote.time_candidate_id == vote.time_candidate_id
+        PlaceVote.meeting_id == vote.meeting_id
     ).first()
     
     if existing_vote:
         # 기존 투표 업데이트
-        if vote.is_available is not None:
-            existing_vote.is_available = vote.is_available
-        if vote.memo is not None:
-            existing_vote.memo = vote.memo
+        existing_vote.place_list = vote.place_list
         db.commit()
         db.refresh(existing_vote)
         return existing_vote
@@ -47,9 +49,7 @@ def create_place_vote(db: Session, vote: PlaceVoteCreate) -> PlaceVote:
     db_vote = PlaceVote(
         participant_id=vote.participant_id,
         meeting_id=vote.meeting_id,
-        time_candidate_id=vote.time_candidate_id,
-        is_available=vote.is_available,
-        memo=vote.memo,
+        place_list=vote.place_list,
     )
     db.add(db_vote)
     db.commit()
@@ -65,10 +65,8 @@ def update_place_vote(
     if not db_vote:
         return None
     
-    if vote_update.is_available is not None:
-        db_vote.is_available = vote_update.is_available
-    if vote_update.memo is not None:
-        db_vote.memo = vote_update.memo
+    if vote_update.place_list is not None:
+        db_vote.place_list = vote_update.place_list
     
     db.commit()
     db.refresh(db_vote)
