@@ -134,10 +134,8 @@ async def recommend_places(
         "total_candidates": len(places),
     }
     
-    candidate_id = (
-        recommendations_data.recommendations[0].place_id 
-        if recommendations_data.recommendations else "unknown"
-    )
+    import uuid
+    candidate_id = str(uuid.uuid4())  # 랜덤 UUID 생성
     
     # DB에 저장 (기존 데이터가 있으면 업데이트)
     try:
