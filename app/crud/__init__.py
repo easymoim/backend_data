@@ -9,6 +9,7 @@ from app.crud import (
     place_candidate,
     place_vote,
     review,
+    event_activity_information,
 )
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     "place_candidate",
     "place_vote",
     "review",
+    "event_activity_information",
 ]
 
