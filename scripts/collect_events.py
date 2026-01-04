@@ -16,7 +16,7 @@ from app.models.event_activity_information import EventActivityInformation
 
 
 # API 설정
-API_KEY = os.getenv("SEOUL_OPENAPI_KEY", "4e6b4b68676b797535385849686377")
+API_KEY = os.getenv("SEOUL_OPENAPI_KEY")
 BASE_URL = f"http://openapi.seoul.go.kr:8088/{API_KEY}/xml/culturalEventInfo"
 BATCH_SIZE = 1000  # 한 번에 가져올 데이터 수
 
