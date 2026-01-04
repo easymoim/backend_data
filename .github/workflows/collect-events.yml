@@ -1,0 +1,35 @@
+name: Collect Seoul Cultural Events
+
+on:
+  schedule:
+    # 매일 한국시간 오전 10시 실행 (UTC 01:00 = KST 10:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests sqlalchemy pg8000 pydantic python-dotenv
+
+      - name: Run collection script
+        env:
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEOUL_OPENAPI_KEY: ${{ secrets.SEOUL_OPENAPI_KEY }}
+          USE_CONNECTION_POOLER: "true"
+        run: |
+          python scripts/collect_events.py
+
