@@ -548,6 +548,7 @@ async def full_recommendation_pipeline(
     district_votes: Optional[dict[str, int]] = None,
     preferred_station: Optional[str] = None,
     station_votes: Optional[dict[str, int]] = None,
+    location_choice_value: Optional[str] = None,
 ) -> dict:
     """
     전체 추천 파이프라인 (1단계 + 2단계 + 3단계)
@@ -619,6 +620,7 @@ async def full_recommendation_pipeline(
         district_votes=district_votes,
         preferred_station=preferred_station,
         station_votes=station_votes,
+        location_choice_value=location_choice_value,
     )
     
     # 3단계: LLM 추천

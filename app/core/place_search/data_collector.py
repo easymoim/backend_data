@@ -26,6 +26,41 @@ from .kakao_client import KakaoLocalClient
 from .station_utils import get_station_coordinates, get_district_from_station
 
 
+def parse_coordinates(location: str) -> tuple[float, float] | None:
+    """
+    location 문자열이 좌표 형식인지 판별하고 파싱
+    
+    Args:
+        location: 위치 문자열 (예: "37.521250668301604, 126.92934217570108" 또는 "안국역")
+        
+    Returns:
+        (latitude, longitude) 튜플 또는 None (좌표 형식이 아닌 경우)
+    """
+    if not location:
+        return None
+    
+    # 콤마로 분리
+    parts = location.replace(" ", "").split(",")
+    if len(parts) != 2:
+        return None
+    
+    try:
+        lat = float(parts[0])
+        lon = float(parts[1])
+        
+        # 위도/경도 범위 체크 (한국 기준)
+        # 위도: 33~43, 경도: 124~132
+        if 33 <= lat <= 43 and 124 <= lon <= 132:
+            return (lat, lon)
+        # 경도, 위도 순서로 입력된 경우
+        elif 33 <= lon <= 43 and 124 <= lat <= 132:
+            return (lon, lat)
+        
+        return None
+    except ValueError:
+        return None
+
+
 class MeetingDataCollector:
     """
     모임 데이터 수집 및 분석 서비스
@@ -93,6 +128,7 @@ class MeetingDataCollector:
         district_votes: Optional[dict[str, int]] = None,
         preferred_station: Optional[str] = None,
         station_votes: Optional[dict[str, int]] = None,
+        location_choice_value: Optional[str] = None,
     ) -> tuple[MeetingContext, list[SearchKeyword]]:
         """
         직접 데이터를 전달받아 분석 (DB 없이 사용 가능)
@@ -143,6 +179,7 @@ class MeetingDataCollector:
             participant_locations=locations,
             preferred_district=preferred_district,
             preferred_station=preferred_station,
+            location_choice_value=location_choice_value,
         )
         
         # MeetingContext 생성
@@ -175,6 +212,7 @@ class MeetingDataCollector:
         participant_locations: list[ParticipantLocation],
         preferred_district: Optional[str] = None,
         preferred_station: Optional[str] = None,
+        location_choice_value: Optional[str] = None,
     ) -> Optional[CenterLocation]:
         """
         장소 선택 방식에 따른 중심 위치 계산
@@ -184,12 +222,38 @@ class MeetingDataCollector:
             participant_locations: 참가자 위치 리스트
             preferred_district: 선호 지역
             preferred_station: 선호 지하철역
+            location_choice_value: 직접 입력된 위치값 (주소 또는 좌표)
             
         Returns:
             CenterLocation
         """
         if choice_type == LocationChoiceType.CENTER_LOCATION:
-            # 중간위치 방식: 참가자 위치의 중심점
+            # center_location 방식에서 직접 입력된 위치값이 있으면 사용
+            if location_choice_value:
+                # 좌표 형식인지 확인
+                coords = parse_coordinates(location_choice_value)
+                if coords:
+                    # 좌표 형식이면 바로 CenterLocation 반환
+                    district = None
+                    if self.kakao_client:
+                        district = await self.kakao_client.get_region_from_coordinates(
+                            coords[0], coords[1]
+                        )
+                    return CenterLocation(
+                        latitude=coords[0],
+                        longitude=coords[1],
+                        district=district,
+                    )
+                else:
+                    # 주소/역명 형식이면 카카오 API로 좌표 변환
+                    if self.kakao_client:
+                        center = await self.kakao_client.get_address_coordinates(
+                            location_choice_value
+                        )
+                        if center:
+                            return center
+            
+            # 직접 입력값이 없거나 변환 실패시 참가자 위치의 중심점 계산
             return await self.calculate_center_location(participant_locations)
         
         elif choice_type == LocationChoiceType.PREFERENCE_AREA:
@@ -292,10 +356,21 @@ class MeetingDataCollector:
         participant_locations = []
         for p in participants:
             if p.location:
-                loc = ParticipantLocation(
-                    participant_id=p.id,
-                    address=p.location,
-                )
+                # 좌표 형식인지 확인
+                coords = parse_coordinates(p.location)
+                if coords:
+                    # 좌표 형식이면 latitude/longitude 직접 설정
+                    loc = ParticipantLocation(
+                        participant_id=p.id,
+                        latitude=coords[0],
+                        longitude=coords[1],
+                    )
+                else:
+                    # 주소/역명 형식이면 address에 설정
+                    loc = ParticipantLocation(
+                        participant_id=p.id,
+                        address=p.location,
+                    )
                 participant_locations.append(loc)
         
         # MeetingContext 생성
@@ -486,6 +561,7 @@ async def analyze_meeting_data(
     district_votes: Optional[dict[str, int]] = None,
     preferred_station: Optional[str] = None,
     station_votes: Optional[dict[str, int]] = None,
+    location_choice_value: Optional[str] = None,
 ) -> tuple[MeetingContext, list[SearchKeyword]]:
     """
     직접 데이터로 분석하는 편의 함수 (DB 없이 사용)
@@ -613,5 +689,6 @@ async def analyze_meeting_data(
         district_votes=district_votes,
         preferred_station=preferred_station,
         station_votes=station_votes,
+        location_choice_value=location_choice_value,
     )
 
