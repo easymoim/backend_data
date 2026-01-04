@@ -60,13 +60,41 @@ def read_place_vote(vote_id: UUID, db: Session = Depends(get_db)):
 def update_place_vote(
     vote_id: UUID, vote_update: PlaceVoteUpdate, db: Session = Depends(get_db)
 ):
-    """장소 투표 정보 업데이트"""
+    """장소 투표 정보 업데이트 (vote_id로)"""
     db_vote = crud.place_vote.update_place_vote(db, vote_id=vote_id, vote_update=vote_update)
     if db_vote is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="장소 투표를 찾을 수 없습니다."
         )
+    return db_vote
+
+
+@router.put("/participant/{participant_id}/meeting/{meeting_id}", response_model=PlaceVoteResponse)
+def update_place_vote_by_participant_and_meeting(
+    participant_id: UUID, 
+    meeting_id: UUID, 
+    vote_update: PlaceVoteUpdate, 
+    db: Session = Depends(get_db)
+):
+    """장소 투표 정보 업데이트 (participant_id와 meeting_id로)"""
+    # 기존 투표 조회
+    db_vote = crud.place_vote.get_place_vote_by_participant_and_meeting(
+        db, participant_id=participant_id, meeting_id=meeting_id
+    )
+    
+    if not db_vote:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="장소 투표를 찾을 수 없습니다."
+        )
+    
+    # place_list 업데이트
+    if vote_update.place_list is not None:
+        db_vote.place_list = vote_update.place_list
+        db.commit()
+        db.refresh(db_vote)
+    
     return db_vote
 
 

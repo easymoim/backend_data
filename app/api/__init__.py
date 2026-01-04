@@ -4,7 +4,6 @@ from app.api import (
     user,
     meeting,
     participant,
-    time_candidate,
     time_vote,
     place,
     place_candidate,
@@ -20,7 +19,6 @@ api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(user.router, prefix="/users", tags=["users"])
 api_router.include_router(meeting.router, prefix="/meetings", tags=["meetings"])
 api_router.include_router(participant.router, prefix="/participants", tags=["participants"])
-api_router.include_router(time_candidate.router, prefix="/time-candidates", tags=["time-candidates"])
 api_router.include_router(time_vote.router, prefix="/time-votes", tags=["time-votes"])
 api_router.include_router(place.router, prefix="/places", tags=["places"])
 api_router.include_router(place_candidate.router, prefix="/place-candidates", tags=["place-candidates"])

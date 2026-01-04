@@ -3,7 +3,6 @@ from typing import List, Optional
 from uuid import UUID
 from app.models.time_vote import TimeVote
 from app.schemas.time_vote import TimeVoteCreate, TimeVoteUpdate
-from app.crud.meeting_time_candidate import update_vote_count
 
 
 def get_time_vote(db: Session, vote_id: UUID) -> Optional[TimeVote]:
@@ -16,26 +15,26 @@ def get_time_votes_by_participant(db: Session, participant_id: UUID) -> List[Tim
     return db.query(TimeVote).filter(TimeVote.participant_id == participant_id).all()
 
 
-def get_time_votes_by_candidate(db: Session, candidate_id: UUID) -> List[TimeVote]:
-    """시간 후보별 투표 목록 조회"""
-    return db.query(TimeVote).filter(TimeVote.time_candidate_id == candidate_id).all()
+def get_time_votes_by_meeting(db: Session, meeting_id: UUID) -> List[TimeVote]:
+    """모임별 투표 목록 조회"""
+    return db.query(TimeVote).filter(TimeVote.meeting_id == meeting_id).all()
 
 
-def get_time_vote_by_participant_and_candidate(
-    db: Session, participant_id: UUID, candidate_id: UUID
+def get_time_vote_by_participant_and_meeting(
+    db: Session, participant_id: UUID, meeting_id: UUID
 ) -> Optional[TimeVote]:
-    """참가자와 시간 후보로 투표 조회"""
+    """참가자와 모임으로 투표 조회"""
     return db.query(TimeVote).filter(
         TimeVote.participant_id == participant_id,
-        TimeVote.time_candidate_id == candidate_id
+        TimeVote.meeting_id == meeting_id
     ).first()
 
 
 def create_time_vote(db: Session, vote: TimeVoteCreate) -> TimeVote:
     """새 투표 생성 (이미 존재하면 업데이트)"""
     # 기존 투표 확인
-    existing_vote = get_time_vote_by_participant_and_candidate(
-        db, vote.participant_id, vote.time_candidate_id
+    existing_vote = get_time_vote_by_participant_and_meeting(
+        db, vote.participant_id, vote.meeting_id
     )
     
     if existing_vote:
@@ -46,15 +45,12 @@ def create_time_vote(db: Session, vote: TimeVoteCreate) -> TimeVote:
             existing_vote.memo = vote.memo
         db.commit()
         db.refresh(existing_vote)
-        # 투표 수 업데이트
-        update_vote_count(db, vote.time_candidate_id)
         return existing_vote
     
     # 새 투표 생성
     db_vote = TimeVote(
         participant_id=vote.participant_id,
         meeting_id=vote.meeting_id,
-        time_candidate_id=vote.time_candidate_id,
         time_list=vote.time_list,
         is_available=vote.is_available,
         memo=getattr(vote, 'memo', None),
@@ -62,8 +58,6 @@ def create_time_vote(db: Session, vote: TimeVoteCreate) -> TimeVote:
     db.add(db_vote)
     db.commit()
     db.refresh(db_vote)
-    # 투표 수 업데이트
-    update_vote_count(db, vote.time_candidate_id)
     return db_vote
 
 
@@ -82,8 +76,6 @@ def update_time_vote(db: Session, vote_id: UUID, vote_update: TimeVoteUpdate) ->
     
     db.commit()
     db.refresh(db_vote)
-    # 투표 수 업데이트
-    update_vote_count(db, db_vote.time_candidate_id)
     return db_vote
 
 
@@ -93,10 +85,7 @@ def delete_time_vote(db: Session, vote_id: UUID) -> bool:
     if not db_vote:
         return False
     
-    candidate_id = db_vote.time_candidate_id
     db.delete(db_vote)
     db.commit()
-    # 투표 수 업데이트
-    update_vote_count(db, candidate_id)
     return True
 

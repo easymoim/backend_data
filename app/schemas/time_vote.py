@@ -15,7 +15,6 @@ class TimeVoteCreate(TimeVoteBase):
     """시간 투표 생성 스키마"""
     participant_id: UUID
     meeting_id: UUID
-    time_candidate_id: UUID
 
 
 class TimeVoteUpdate(BaseModel):
@@ -30,7 +29,6 @@ class TimeVoteResponse(TimeVoteBase):
     id: UUID
     participant_id: UUID
     meeting_id: UUID
-    time_candidate_id: UUID
     created_at: datetime
     updated_at: datetime
 
