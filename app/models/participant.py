@@ -17,10 +17,8 @@ class Participant(Base):
     
     # 참가자 정보
     nickname = Column(String(255), nullable=True)  # 닉네임
-    oauth_key = Column(String(255), nullable=True)  # 카카오 고유 id
     
     # 참가 상태
-    is_invited = Column(Boolean, default=False)
     has_responded = Column(Boolean, default=False)  # 응답 여부
     preference_place = Column(JSON, nullable=True)  # {"mood": "대화 나누기 좋은", "food": "한식", "condition": "주차"}
     location = Column(String(255), nullable=True)  # 장소
