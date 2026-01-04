@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
@@ -8,9 +8,7 @@ class PlaceVoteBase(BaseModel):
     """장소 투표 기본 스키마"""
     participant_id: UUID
     meeting_id: UUID
-    time_candidate_id: UUID
-    is_available: bool = True
-    memo: Optional[str] = None
+    place_list: List[str]  # 장소 목록 (text[])
 
 
 class PlaceVoteCreate(PlaceVoteBase):
@@ -20,8 +18,7 @@ class PlaceVoteCreate(PlaceVoteBase):
 
 class PlaceVoteUpdate(BaseModel):
     """장소 투표 업데이트 스키마"""
-    is_available: Optional[bool] = None
-    memo: Optional[str] = None
+    place_list: Optional[List[str]] = None
 
 
 class PlaceVoteResponse(PlaceVoteBase):
