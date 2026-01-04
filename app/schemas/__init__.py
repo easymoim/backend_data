@@ -19,6 +19,11 @@ from app.schemas.place_recommendation import (
     PlaceRecommendationResponse,
     RecommendedPlace,
 )
+from app.schemas.event_activity_information import (
+    EventActivityInformationCreate,
+    EventActivityInformationResponse,
+    EventActivityInformationUpdate,
+)
 
 __all__ = [
     "UserCreate",
@@ -48,5 +53,8 @@ __all__ = [
     "PlaceRecommendationRequest",
     "PlaceRecommendationResponse",
     "RecommendedPlace",
+    "EventActivityInformationCreate",
+    "EventActivityInformationResponse",
+    "EventActivityInformationUpdate",
 ]
 

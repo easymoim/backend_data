@@ -7,6 +7,7 @@ from app.models.place import Place
 from app.models.place_candidate import PlaceCandidate
 from app.models.place_vote import PlaceVote
 from app.models.review import Review
+from app.models.event_activity_information import EventActivityInformation
 
 __all__ = [
     "User",
@@ -20,5 +21,6 @@ __all__ = [
     "PlaceCandidate",
     "PlaceVote",
     "Review",
+    "EventActivityInformation",
 ]
 
