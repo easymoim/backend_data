@@ -17,7 +17,6 @@ from app.models import (
     User,
     Meeting,
     Participant,
-    MeetingTimeCandidate,
     TimeVote,
     Place,
     PlaceCandidate,
