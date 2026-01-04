@@ -25,7 +25,9 @@ def create_participant(db: Session, participant: ParticipantCreate) -> Participa
     db_participant = Participant(
         meeting_id=participant.meeting_id,
         user_id=participant.user_id,
+        nickname=participant.nickname,
         location=participant.location,
+        preference_place=participant.preference_place,
     )
     db.add(db_participant)
     db.commit()
@@ -39,8 +41,12 @@ def update_participant(db: Session, participant_id: UUID, participant_update: Pa
     if not db_participant:
         return None
     
+    if participant_update.nickname is not None:
+        db_participant.nickname = participant_update.nickname
     if participant_update.location is not None:
         db_participant.location = participant_update.location
+    if participant_update.preference_place is not None:
+        db_participant.preference_place = participant_update.preference_place
     if participant_update.has_responded is not None:
         db_participant.has_responded = participant_update.has_responded
     
