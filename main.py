@@ -23,6 +23,7 @@ from app.models import (
     PlaceCandidate,
     PlaceVote,
     Review,
+    EventActivityInformation,
 )
 from app.api import api_router
 from app.middleware.performance import PerformanceMiddleware, get_performance_stats
