@@ -11,6 +11,7 @@ from app.api import (
     place_vote,
     review,
     place_recommendation,
+    event_activity_information,
 )
 
 api_router = APIRouter()
@@ -26,4 +27,5 @@ api_router.include_router(place_candidate.router, prefix="/place-candidates", ta
 api_router.include_router(place_vote.router, prefix="/place-votes", tags=["place-votes"])
 api_router.include_router(review.router, prefix="/reviews", tags=["reviews"])
 api_router.include_router(place_recommendation.router, prefix="/place-recommendations", tags=["place-recommendations"])
+api_router.include_router(event_activity_information.router, prefix="/event-activity-informations", tags=["event-activity-informations"])
 

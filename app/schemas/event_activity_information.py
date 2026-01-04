@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
-from datetime import date, datetime
+from datetime import datetime
 
 
 class EventActivityInformationBase(BaseModel):
@@ -19,7 +19,6 @@ class EventActivityInformationBase(BaseModel):
     program_info: Optional[str] = None  # 프로그램 정보
     organization_link: Optional[str] = None  # 기관 링크
     thumbnail_image: Optional[str] = None  # 썸네일 이미지 URL
-    register_date: Optional[date] = None  # 등록 날짜
     host_type: Optional[str] = None  # 주최자 유형 (시민/기관)
     start_date: Optional[datetime] = None  # 시작 일시
     end_date: Optional[datetime] = None  # 종료 일시
@@ -50,7 +49,6 @@ class EventActivityInformationUpdate(BaseModel):
     program_info: Optional[str] = None
     organization_link: Optional[str] = None
     thumbnail_image: Optional[str] = None
-    register_date: Optional[date] = None
     host_type: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
@@ -67,3 +65,5 @@ class EventActivityInformationResponse(EventActivityInformationBase):
 
     class Config:
         orm_mode = True
+        # None 값을 허용하도록 설정
+        allow_none = True
