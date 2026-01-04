@@ -35,6 +35,7 @@ def create_place_candidate(db: Session, candidate: PlaceCandidateCreate) -> Plac
         food=candidate.food,
         condition=candidate.condition,
         location_type=location_type_enum,
+        selected_place_list=candidate.selected_place_list,
     )
     db.add(db_candidate)
     db.commit()
@@ -66,6 +67,8 @@ def update_place_candidate(
         except ValueError:
             # 유효하지 않은 값인 경우 None으로 설정
             db_candidate.location_type = None
+    if candidate_update.selected_place_list is not None:
+        db_candidate.selected_place_list = candidate_update.selected_place_list
     
     db.commit()
     db.refresh(db_candidate)

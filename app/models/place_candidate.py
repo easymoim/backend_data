@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, ForeignKey, Enum, ARRAY
 from sqlalchemy.dialects.postgresql import UUID, JSON, ENUM
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -31,6 +31,7 @@ class PlaceCandidate(Base):
     food = Column(String(255), nullable=True)
     condition = Column(String(255), nullable=True)
     location_type = Column(location_type_enum, nullable=True)  # DB의 기존 enum 사용
+    selected_place_list = Column(ARRAY(String), nullable=True)  # 선택된 장소 목록 (text[])
     
     # 관계
     meeting = relationship("Meeting")

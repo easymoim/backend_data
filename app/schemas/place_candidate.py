@@ -13,6 +13,7 @@ class PlaceCandidateBase(BaseModel):
     food: Optional[str] = None
     condition: Optional[str] = None
     location_type: Optional[str] = None  # center_location, preference_area, preference_subway
+    selected_place_list: Optional[List[str]] = None  # 선택된 장소 목록 (text[])
 
 
 class PlaceCandidateCreate(PlaceCandidateBase):
@@ -28,6 +29,7 @@ class PlaceCandidateUpdate(BaseModel):
     food: Optional[str] = None
     condition: Optional[str] = None
     location_type: Optional[str] = None
+    selected_place_list: Optional[List[str]] = None  # 선택된 장소 목록 (text[])
 
 
 class PlaceCandidateResponse(PlaceCandidateBase):
