@@ -43,8 +43,6 @@ def update_participant(db: Session, participant_id: UUID, participant_update: Pa
         db_participant.location = participant_update.location
     if participant_update.has_responded is not None:
         db_participant.has_responded = participant_update.has_responded
-    if participant_update.is_invited is not None:
-        db_participant.is_invited = participant_update.is_invited
     
     db.commit()
     db.refresh(db_participant)
