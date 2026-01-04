@@ -179,6 +179,7 @@ class PlaceSearcher:
         district_votes: Optional[dict[str, int]] = None,
         preferred_station: Optional[str] = None,
         station_votes: Optional[dict[str, int]] = None,
+        location_choice_value: Optional[str] = None,
     ) -> dict:
         """
         전체 검색 파이프라인 실행 (데이터 수집 → 키워드 생성 → 장소 검색)
@@ -222,6 +223,7 @@ class PlaceSearcher:
             district_votes=district_votes,
             preferred_station=preferred_station,
             station_votes=station_votes,
+            location_choice_value=location_choice_value,
         )
         
         # 2단계: 장소 검색

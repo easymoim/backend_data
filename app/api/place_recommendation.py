@@ -90,6 +90,7 @@ async def recommend_places(
             district_votes=input_data.get("district_votes"),
             preferred_station=input_data.get("preferred_station"),
             station_votes=input_data.get("station_votes"),
+            location_choice_value=input_data.get("location_choice_value"),
         )
         print(f"[DEBUG] Pipeline completed successfully")
     except Exception as e:
@@ -287,17 +288,21 @@ def _extract_input_from_db(meeting, participants: List) -> dict:
     if not preferences:
         preferences = [{"food_types": ["한식"], "atmospheres": [], "conditions": []}]
     
-    # 5. 선호 지역/역 정보
+    # 5. 선호 지역/역 정보 및 location_choice_value
     preferred_district = None
     preferred_station = None
     district_votes = None
     station_votes = None
+    location_choice_value = None
     
     if meeting.location_choice_value:
         if location_choice_type == "preference_area":
             preferred_district = meeting.location_choice_value
         elif location_choice_type == "preference_subway":
             preferred_station = meeting.location_choice_value
+        elif location_choice_type == "center_location":
+            # center_location 타입일 때도 직접 입력한 위치값 사용
+            location_choice_value = meeting.location_choice_value
     
     # 6. 모임 목적
     purpose = "dining"  # 기본값
@@ -317,5 +322,6 @@ def _extract_input_from_db(meeting, participants: List) -> dict:
         "district_votes": district_votes,
         "preferred_station": preferred_station,
         "station_votes": station_votes,
+        "location_choice_value": location_choice_value,
     }
 
