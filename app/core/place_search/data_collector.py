@@ -335,7 +335,7 @@ class MeetingDataCollector:
             raise ValueError("데이터베이스 세션이 필요합니다.")
         
         # 지연 임포트 (순환 참조 방지)
-        from app.models import Meeting, Participant, MeetingTimeCandidate
+        from app.models import Meeting, Participant
         
         # 모임 조회
         meeting = self.db.query(Meeting).filter(Meeting.id == meeting_id).first()
@@ -345,11 +345,6 @@ class MeetingDataCollector:
         # 참가자 조회
         participants = self.db.query(Participant).filter(
             Participant.meeting_id == meeting_id
-        ).all()
-        
-        # 시간 후보 조회
-        time_candidates = self.db.query(MeetingTimeCandidate).filter(
-            MeetingTimeCandidate.meeting_id == meeting_id
         ).all()
         
         # ParticipantLocation 리스트 생성
@@ -381,10 +376,7 @@ class MeetingDataCollector:
             description=meeting.description,
             participant_locations=participant_locations,
             expected_participant_count=len(participants) or 4,
-            candidate_times=[
-                tc.candidate_time.isoformat() 
-                for tc in time_candidates
-            ],
+            candidate_times=[],  # meeting_time_candidate 제거로 인해 빈 배열로 설정
         )
         
         return context
