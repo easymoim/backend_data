@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests sqlalchemy pg8000 pydantic python-dotenv
+          pip install -r requirements.txt
 
       - name: Run collection script
         env:
