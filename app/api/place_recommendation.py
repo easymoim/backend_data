@@ -108,6 +108,17 @@ async def recommend_places(
     places = result["places"]
     
     # 5. place_candidate 테이블에 저장
+    # 중간 위치 정보 추출
+    context = result.get("context")
+    center_location_data = None
+    if context and context.center_location:
+        center_location_data = {
+            "latitude": context.center_location.latitude,
+            "longitude": context.center_location.longitude,
+            "address": context.center_location.address,
+            "district": context.center_location.district,
+        }
+    
     location_json = {
         "recommendations": [
             {
@@ -132,6 +143,7 @@ async def recommend_places(
         "model_used": recommendations_data.model_used,
         "search_keywords": [kw.keyword for kw in keywords],
         "total_candidates": len(places),
+        "center_location": center_location_data,  # 계산된 중간 위치
     }
     
     import uuid

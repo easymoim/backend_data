@@ -237,16 +237,14 @@ class MeetingDataCollector:
                 # 좌표 형식인지 확인
                 coords = parse_coordinates(location_choice_value)
                 if coords:
-                    # 좌표 형식이면 바로 CenterLocation 반환
-                    district = None
+                    # 좌표 형식이면 주소와 지역구 정보도 함께 가져옴
                     if self.kakao_client:
-                        district = await self.kakao_client.get_region_from_coordinates(
+                        return await self.kakao_client.get_address_from_coordinates(
                             coords[0], coords[1]
                         )
                     return CenterLocation(
                         latitude=coords[0],
                         longitude=coords[1],
-                        district=district,
                     )
                 else:
                     # 주소/역명 형식이면 카카오 API로 좌표 변환
@@ -466,17 +464,15 @@ class MeetingDataCollector:
         avg_lat = sum(c[0] for c in coords) / len(coords)
         avg_lon = sum(c[1] for c in coords) / len(coords)
         
-        # 중심 좌표의 지역구 조회
-        district = None
+        # 중심 좌표의 주소와 지역구 조회
         if self.kakao_client:
-            district = await self.kakao_client.get_region_from_coordinates(
+            return await self.kakao_client.get_address_from_coordinates(
                 avg_lat, avg_lon
             )
         
         return CenterLocation(
             latitude=avg_lat,
             longitude=avg_lon,
-            district=district,
         )
     
     def calculate_center_simple(
