@@ -232,31 +232,38 @@ class MeetingDataCollector:
             CenterLocation
         """
         if choice_type == LocationChoiceType.CENTER_LOCATION:
-            # center_location 방식에서 직접 입력된 위치값이 있으면 사용
+            # center_location 방식: location_choice_value와 참가자 위치 모두 고려해서 중심점 계산
+            from uuid import uuid4
+            
+            # 모든 위치를 담을 리스트 (참가자 위치 복사)
+            all_locations = list(participant_locations)
+            
+            # location_choice_value가 있으면 추가 위치로 포함
             if location_choice_value:
-                # 좌표 형식인지 확인
                 coords = parse_coordinates(location_choice_value)
                 if coords:
-                    # 좌표 형식이면 주소와 지역구 정보도 함께 가져옴
-                    if self.kakao_client:
-                        return await self.kakao_client.get_address_from_coordinates(
-                            coords[0], coords[1]
-                        )
-                    return CenterLocation(
+                    # 좌표 형식
+                    all_locations.append(ParticipantLocation(
+                        participant_id=uuid4(),
                         latitude=coords[0],
                         longitude=coords[1],
-                    )
+                    ))
                 else:
-                    # 주소/역명 형식이면 카카오 API로 좌표 변환
+                    # 주소/역명 형식 - 좌표로 변환해서 추가
                     if self.kakao_client:
                         center = await self.kakao_client.get_address_coordinates(
                             location_choice_value
                         )
                         if center:
-                            return center
+                            all_locations.append(ParticipantLocation(
+                                participant_id=uuid4(),
+                                latitude=center.latitude,
+                                longitude=center.longitude,
+                                address=location_choice_value,
+                            ))
             
-            # 직접 입력값이 없거나 변환 실패시 참가자 위치의 중심점 계산
-            return await self.calculate_center_location(participant_locations)
+            # 모든 위치의 중심점 계산
+            return await self.calculate_center_location(all_locations)
         
         elif choice_type == LocationChoiceType.PREFERENCE_AREA:
             # 선호 지역 방식: 해당 지역의 중심

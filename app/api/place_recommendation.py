@@ -234,6 +234,38 @@ async def recommend_places(
     )
 
 
+def _parse_coordinates(location: str) -> tuple[float, float] | None:
+    """
+    location 문자열이 좌표 형식인지 판별하고 파싱
+    
+    Args:
+        location: 위치 문자열 (예: "37.521, 126.929" 또는 "안국역")
+        
+    Returns:
+        (latitude, longitude) 튜플 또는 None (좌표 형식이 아닌 경우)
+    """
+    if not location:
+        return None
+    
+    parts = location.replace(" ", "").split(",")
+    if len(parts) != 2:
+        return None
+    
+    try:
+        lat = float(parts[0])
+        lon = float(parts[1])
+        
+        # 위도/경도 범위 체크 (한국 기준)
+        if 33 <= lat <= 43 and 124 <= lon <= 132:
+            return (lat, lon)
+        elif 33 <= lon <= 43 and 124 <= lat <= 132:
+            return (lon, lat)
+        
+        return None
+    except ValueError:
+        return None
+
+
 def _extract_input_from_db(meeting, participants: List) -> dict:
     """
     DB 데이터에서 추천 파이프라인 인풋 추출
@@ -245,14 +277,27 @@ def _extract_input_from_db(meeting, participants: List) -> dict:
     else:
         location_choice_type = "center_location"
     
-    # 2. 참가자 위치 정보
+    # 2. 참가자 위치 정보 (좌표 형식이면 파싱)
     locations = []
     for p in participants:
         if p.location:
-            locations.append({
-                "address": p.location,
-                "district": None,
-            })
+            coords = _parse_coordinates(p.location)
+            if coords:
+                # 좌표 형식
+                locations.append({
+                    "latitude": coords[0],
+                    "longitude": coords[1],
+                    "address": None,
+                    "district": None,
+                })
+            else:
+                # 주소/역명 형식
+                locations.append({
+                    "address": p.location,
+                    "latitude": None,
+                    "longitude": None,
+                    "district": None,
+                })
     
     # 3. 참가자 선호도
     preferences = []
