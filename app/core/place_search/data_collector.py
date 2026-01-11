@@ -102,12 +102,16 @@ class MeetingDataCollector:
         # 1. 모임 및 참가자 정보 로드
         context = await self.load_meeting_context(meeting_id)
         
-        # 2. 중심 위치 계산
-        if context.participant_locations:
-            center = await self.calculate_center_location(
-                context.participant_locations
-            )
-            context.center_location = center
+        # 2. 중심 위치 계산 (장소 선택 방식에 따라 다르게 처리)
+        location_choice_value = getattr(context, '_location_choice_value', None)
+        center = await self._calculate_location_by_choice_type(
+            choice_type=context.location_choice_type,
+            participant_locations=context.participant_locations,
+            preferred_district=context.preferred_district,
+            preferred_station=context.preferred_station,
+            location_choice_value=location_choice_value,
+        )
+        context.center_location = center
         
         # 3. 검색 키워드 생성
         keywords = self.keyword_generator.generate_keywords(context)
@@ -233,16 +237,14 @@ class MeetingDataCollector:
                 # 좌표 형식인지 확인
                 coords = parse_coordinates(location_choice_value)
                 if coords:
-                    # 좌표 형식이면 바로 CenterLocation 반환
-                    district = None
+                    # 좌표 형식이면 주소와 지역구 정보도 함께 가져옴
                     if self.kakao_client:
-                        district = await self.kakao_client.get_region_from_coordinates(
+                        return await self.kakao_client.get_address_from_coordinates(
                             coords[0], coords[1]
                         )
                     return CenterLocation(
                         latitude=coords[0],
                         longitude=coords[1],
-                        district=district,
                     )
                 else:
                     # 주소/역명 형식이면 카카오 API로 좌표 변환
@@ -368,16 +370,42 @@ class MeetingDataCollector:
                     )
                 participant_locations.append(loc)
         
+        # location_choice_type 및 location_choice_value 추출
+        location_choice_type = LocationChoiceType.CENTER_LOCATION
+        if meeting.location_choice_type:
+            raw_value = meeting.location_choice_type.value if hasattr(meeting.location_choice_type, "value") else meeting.location_choice_type
+            try:
+                location_choice_type = LocationChoiceType(raw_value)
+            except ValueError:
+                location_choice_type = LocationChoiceType.CENTER_LOCATION
+        
+        location_choice_value = meeting.location_choice_value if hasattr(meeting, 'location_choice_value') else None
+        
+        # 선호 지역/역 정보 추출
+        preferred_district = None
+        preferred_station = None
+        if location_choice_value:
+            if location_choice_type == LocationChoiceType.PREFERENCE_AREA:
+                preferred_district = location_choice_value
+            elif location_choice_type == LocationChoiceType.PREFERENCE_SUBWAY:
+                preferred_station = location_choice_value
+        
         # MeetingContext 생성
         context = MeetingContext(
             meeting_id=meeting.id,
             purpose=meeting.purpose.value if meeting.purpose else "dining",
             title=meeting.title,
             description=meeting.description,
+            location_choice_type=location_choice_type,
             participant_locations=participant_locations,
+            preferred_district=preferred_district,
+            preferred_station=preferred_station,
             expected_participant_count=len(participants) or 4,
             candidate_times=[],  # meeting_time_candidate 제거로 인해 빈 배열로 설정
         )
+        
+        # location_choice_value를 임시 속성으로 저장 (중심 위치 계산에 사용)
+        context._location_choice_value = location_choice_value
         
         return context
     
@@ -436,17 +464,15 @@ class MeetingDataCollector:
         avg_lat = sum(c[0] for c in coords) / len(coords)
         avg_lon = sum(c[1] for c in coords) / len(coords)
         
-        # 중심 좌표의 지역구 조회
-        district = None
+        # 중심 좌표의 주소와 지역구 조회
         if self.kakao_client:
-            district = await self.kakao_client.get_region_from_coordinates(
+            return await self.kakao_client.get_address_from_coordinates(
                 avg_lat, avg_lon
             )
         
         return CenterLocation(
             latitude=avg_lat,
             longitude=avg_lon,
-            district=district,
         )
     
     def calculate_center_simple(

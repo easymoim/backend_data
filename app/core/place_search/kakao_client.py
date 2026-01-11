@@ -435,6 +435,47 @@ class KakaoLocalClient:
         
         return None
     
+    async def get_address_from_coordinates(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> Optional[CenterLocation]:
+        """
+        좌표로부터 주소와 지역구 정보를 가져와 CenterLocation 반환
+        
+        Args:
+            latitude: 위도
+            longitude: 경도
+            
+        Returns:
+            CenterLocation 객체 또는 None
+        """
+        result = await self.coord_to_region(
+            x=str(longitude),
+            y=str(latitude)
+        )
+        documents = result.get("documents", [])
+        
+        address = None
+        district = None
+        
+        for doc in documents:
+            if doc.get("region_type") == "H":  # 행정동
+                district = doc.get("region_2depth_name")  # 구/군
+                # 전체 주소 조합: 시/도 + 구/군 + 동
+                region_1 = doc.get("region_1depth_name", "")  # 시/도
+                region_2 = doc.get("region_2depth_name", "")  # 구/군
+                region_3 = doc.get("region_3depth_name", "")  # 동
+                address = f"{region_1} {region_2} {region_3}".strip()
+                break
+        
+        return CenterLocation(
+            latitude=latitude,
+            longitude=longitude,
+            address=address,
+            district=district,
+        )
+    
     def parse_place_results(
         self, 
         api_response: dict
