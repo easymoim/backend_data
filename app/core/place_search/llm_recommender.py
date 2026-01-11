@@ -460,8 +460,8 @@ JSON 형식으로만 응답해주세요.
         
         # 중간 위치 주소 추출
         center_location_address = None
-        if meeting_context.center_location:
-            center_location_address = meeting_context.center_location.address or meeting_context.center_location.district
+        if context.center_location:
+            center_location_address = context.center_location.address or context.center_location.district
         
         return LLMRecommendationResult(
             recommendations=recommendations,
