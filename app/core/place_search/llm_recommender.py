@@ -458,10 +458,13 @@ JSON 형식으로만 응답해주세요.
             f"{purpose_kr}"
         )
         
+        # 중간 위치 주소 추출
+        center_location_address = context.center_location_address
+        
         return LLMRecommendationResult(
             recommendations=recommendations,
             summary=data.get("summary", "추천이 완료되었습니다."),
-            center_location=context.center_district,
+            center_location=center_location_address,
             meeting_context_summary=context_summary,
             total_candidates=len(candidates),
             model_used=self.model,
@@ -498,10 +501,13 @@ JSON 형식으로만 응답해주세요.
         
         purpose_kr = PURPOSE_KR.get(context.meeting_purpose, context.meeting_purpose)
         
+        # fallback에서도 중간 위치 주소 반환
+        center_location_address = context.center_district  # 지역구라도 반환
+        
         return LLMRecommendationResult(
             recommendations=recommendations,
             summary=f"기본 추천 결과입니다. (파싱 오류: {error})",
-            center_location=context.center_district,
+            center_location=center_location_address,
             meeting_context_summary=f"{context.center_district}, {context.participant_count}명, {purpose_kr}",
             total_candidates=len(candidates),
             model_used=self.model,

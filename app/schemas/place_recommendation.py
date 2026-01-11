@@ -36,7 +36,7 @@ class PlaceRecommendationResponse(BaseModel):
     meeting_id: UUID
     recommendations: List[RecommendedPlace]
     summary: Optional[str] = None
-    center_location: Optional[str] = None  # 중간 위치 (예: 강남역, 홍대 등)
+    center_location: Optional[str] = None  # 중간 위치 주소 (예: 서울 관악구 신림동)
     model_used: Optional[str] = None
     search_keywords: Optional[List[str]] = None
     total_candidates: Optional[int] = None
