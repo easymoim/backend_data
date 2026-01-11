@@ -331,6 +331,7 @@ class LLMPromptContext(BaseModel):
     
     # 위치 정보
     center_district: Optional[str] = Field(None, description="중심 지역")
+    center_location_address: Optional[str] = Field(None, description="중심 위치 전체 주소")
     
     # 선호도 요약 (가중치 포함)
     preferred_food_types: list[str] = Field(default_factory=list, description="선호 음식 종류")
@@ -373,12 +374,18 @@ class LLMPromptContext(BaseModel):
         conditions = [item[0] for item in sorted_conds[:5]]
         cond_weights = dict(sorted_conds[:5])
         
+        # 중심 위치 주소 (address 우선, 없으면 district)
+        center_addr = None
+        if context.center_location:
+            center_addr = context.center_location.address or context.center_location.district
+        
         return cls(
             meeting_purpose=context.purpose,
             participant_count=context.expected_participant_count,
             meeting_title=context.title,
             meeting_description=context.description,
             center_district=context.center_location.district if context.center_location else None,
+            center_location_address=center_addr,
             preferred_food_types=food_types,
             preferred_atmospheres=atmospheres,
             required_conditions=conditions,
